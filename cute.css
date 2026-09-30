@@ -329,6 +329,20 @@ body {
 
 .card-pictogram path:last-child { stroke: #fff8fb; }
 
+.card-pictogram .sample-flower-svg {
+  width: 148px;
+  height: 148px;
+  filter: drop-shadow(0 13px 18px rgba(126, 81, 111, 0.12));
+  transform: rotate(-7deg);
+}
+
+.sample-flower-svg ellipse:nth-child(1) { fill: #f5a7c7; }
+.sample-flower-svg ellipse:nth-child(2) { fill: #c6b8f2; }
+.sample-flower-svg ellipse:nth-child(3) { fill: #b8e4d3; }
+.sample-flower-svg ellipse:nth-child(4) { fill: #ffd5a1; }
+.sample-flower-svg ellipse:nth-child(5) { fill: #f7c5d9; }
+.sample-flower-svg circle { fill: #fff1a7; }
+
 .preview-cipher {
   display: flex;
   justify-content: center;

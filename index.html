@@ -11,7 +11,7 @@
     <title>言うほどじゃないけど。</title>
     <link rel="icon" href="./favicon.svg?v=6" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css?v=6" />
-    <link rel="stylesheet" href="./cute.css?v=6" />
+    <link rel="stylesheet" href="./cute.css?v=7" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
@@ -85,9 +85,13 @@
                 </span>
               </div>
               <div class="card-pictogram" aria-hidden="true">
-                <svg viewBox="0 0 120 120" role="presentation">
-                  <path d="M40 23 20 35l10 24 12-5v43h36V54l12 5 10-24-20-12-9 12H49L40 23Z" />
-                  <path d="M49 35c2 8 20 8 22 0" />
+                <svg class="sample-flower-svg" viewBox="0 0 120 120" role="presentation">
+                  <ellipse cx="60" cy="30" rx="18" ry="28" />
+                  <ellipse cx="88" cy="52" rx="28" ry="18" />
+                  <ellipse cx="78" cy="84" rx="20" ry="27" />
+                  <ellipse cx="42" cy="84" rx="20" ry="27" />
+                  <ellipse cx="32" cy="52" rx="28" ry="18" />
+                  <circle cx="60" cy="60" r="18" />
                 </svg>
               </div>
               <div class="preview-cipher" aria-hidden="true">
@@ -252,7 +256,7 @@
               </label>
               <label class="field">
                 <span>解いたあとに見せたいこと</span>
-                <textarea id="create-message" maxlength="100" rows="3" required placeholder="この服、じつは自分でつくった。"></textarea>
+                <textarea id="create-message" maxlength="100" rows="3" required placeholder="ここに入力"></textarea>
                 <small><span id="message-count">0</span> / 100</small>
               </label>
               <label class="field">
@@ -371,6 +375,6 @@
       <p>解く自由も、解かない自由も。</p>
     </footer>
 
-    <script src="./app.js?v=6" defer></script>
+    <script src="./app.js?v=7" defer></script>
   </body>
 </html>
