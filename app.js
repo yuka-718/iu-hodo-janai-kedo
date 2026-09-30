@@ -300,19 +300,7 @@ function revealCard() {
     visual.classList.add("is-default");
   }
   document.querySelector("#reveal-message").textContent = activeCard.message;
-  document.querySelector("#starter-text").textContent = conversationStarter(activeCard.category);
   revealPanel.scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-function conversationStarter(category) {
-  const starters = {
-    つくったもの: "「これ、どうやってつくったの？」", できるようになったこと: "「いつから練習してたの？」",
-    今日うれしかったこと: "「どんなところがうれしかった？」", 最近好きなもの: "「どこがいちばん好き？」",
-    がんばったこと: "「どんなところをがんばったの？」", ひそかな特技: "「いつ気づいたの？」",
-    おすすめしたいもの: "「どこがおすすめ？」", 行ってみた場所: "「どんな場所だった？」",
-    はじめてやったこと: "「やってみてどうだった？」", 伝えたいありがとう: "「その話、もう少し聞いてもいい？」",
-  };
-  return starters[category] || "「もう少し聞いてもいい？」";
 }
 
 function hintMessage(level) {
