@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="言うほどじゃないけど。ちょっと知ってほしいことを、解ける秘密にするコミュニケーション・プロトタイプ。"
+    />
+    <meta name="theme-color" content="#f5efe3" />
+    <title>言うほどじゃないけど。</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <button class="wordmark" type="button" data-go-home aria-label="トップへ戻る">
+        <span class="wordmark-mark" aria-hidden="true">、</span>
+        <span>言うほどじゃないけど。</span>
+      </button>
+      <button class="button button-small button-ghost" type="button" data-open-create>
+        カードをつくる
+      </button>
+    </header>
+
+    <main>
+      <section class="view is-active" id="home-view" aria-labelledby="hero-title">
+        <div class="hero wrap">
+          <div class="hero-copy">
+            <p class="eyebrow"><span></span> 話しはじめ方の、プロトタイプ</p>
+            <h1 id="hero-title" aria-label="言うほどじゃないけど、気づいてくれたらうれしい。">
+              <span class="desktop-headline" aria-hidden="true">
+                <span class="headline-line">言うほどじゃないけど、</span>
+                <em class="headline-line">気づいてくれたらうれしい。</em>
+              </span>
+              <span class="mobile-headline" aria-hidden="true">
+                <span class="headline-line">言うほどじゃないけど、</span>
+                <em class="headline-line">気づいてくれたら</em>
+                <em class="headline-line">うれしい。</em>
+              </span>
+            </h1>
+            <p class="hero-lead">
+              小さな成果や、最近うれしかったことを、短い暗号にして置いておく。
+              自分から見せつけず、相手が見つけに来られる、新しい自己紹介です。
+            </p>
+            <div class="hero-actions">
+              <button class="button button-primary" type="button" data-open-sample>
+                <span>サンプルを解いてみる</span>
+                <span aria-hidden="true">→</span>
+              </button>
+              <button class="text-button" type="button" data-open-create>
+                自分のカードをつくる
+              </button>
+            </div>
+            <p class="micro-copy">
+              解かなくても通知されません。返信も「いいね」も要りません。
+            </p>
+          </div>
+
+          <div class="hero-card-stage" aria-label="カードの見本">
+            <div class="orbit orbit-one" aria-hidden="true"></div>
+            <div class="orbit orbit-two" aria-hidden="true"></div>
+            <article class="secret-card secret-card-preview">
+              <div class="card-topline">
+                <span class="category-pill">つくったもの</span>
+                <span class="quiet-label">from ゆか</span>
+              </div>
+              <div class="tiny-stitches" aria-hidden="true">· · · · · · ·</div>
+              <p class="card-kicker">最近、ちょっとうれしかったこと。</p>
+              <div class="cipher-row" aria-label="暗号：へ、け">
+                <span>へ</span><span>け</span>
+              </div>
+              <p class="cipher-caption">五十音を、ひとつ前へ。</p>
+              <button class="card-open-button" type="button" data-open-sample>
+                このカードをひらく <span aria-hidden="true">↗</span>
+              </button>
+            </article>
+            <p class="stage-note note-one">知るかどうかは<br />相手が決める</p>
+            <p class="stage-note note-two">反応を<br />要求しない</p>
+          </div>
+        </div>
+
+        <section class="how wrap" aria-labelledby="how-title">
+          <div class="section-heading">
+            <p class="eyebrow"><span></span> HOW IT FEELS</p>
+            <h2 id="how-title">自慢を隠すのではなく、<br />会話の入口を変える。</h2>
+          </div>
+          <div class="steps">
+            <article class="step-card">
+              <p class="step-number">01</p>
+              <div class="step-icon" aria-hidden="true">✎</div>
+              <h3>そっと置く</h3>
+              <p>「作品の話」「うれしかったこと」など、中身の種類だけを見せておきます。</p>
+            </article>
+            <article class="step-card step-card-dark">
+              <p class="step-number">02</p>
+              <div class="step-icon" aria-hidden="true">⌁</div>
+              <h3>少しだけ解く</h3>
+              <p>数十秒の暗号が、相手のことに関心を向ける小さな時間になります。</p>
+            </article>
+            <article class="step-card">
+              <p class="step-number">03</p>
+              <div class="step-icon" aria-hidden="true">○</div>
+              <h3>会話が生まれる</h3>
+              <p>「え、これつくったの？」から始まる。もちろん、見るだけでも大丈夫です。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="principles-wrap">
+          <div class="principles wrap">
+            <div>
+              <p class="eyebrow eyebrow-light"><span></span> PROMISE</p>
+              <h2>やさしく隠すための、<br />三つの約束。</h2>
+            </div>
+            <ol class="promise-list">
+              <li>
+                <span>01</span>
+                <div><strong>解かなくてもわからない</strong><p>途中でやめても、送り手には通知しません。</p></div>
+              </li>
+              <li>
+                <span>02</span>
+                <div><strong>中身の種類は先に見える</strong><p>何を見ようとしているか、自分で選べます。</p></div>
+              </li>
+              <li>
+                <span>03</span>
+                <div><strong>反応しなくていい</strong><p>返信や「いいね」を、解く条件にしません。</p></div>
+              </li>
+            </ol>
+          </div>
+        </section>
+      </section>
+
+      <section class="view reader-view" id="reader-view" aria-labelledby="reader-title" hidden>
+        <div class="reader-shell">
+          <button class="back-button" type="button" data-go-home>
+            <span aria-hidden="true">←</span> もどる
+          </button>
+
+          <div class="reader-intro">
+            <p class="eyebrow"><span></span> A SMALL SECRET</p>
+            <p id="reader-from" class="reader-from"></p>
+            <h1 id="reader-title"></h1>
+            <p id="reader-category" class="reader-category"></p>
+          </div>
+
+          <article class="puzzle-panel" id="puzzle-panel">
+            <div class="puzzle-header">
+              <div>
+                <p class="panel-label">あいことば</p>
+                <h2>暗号を、ひとつ前にもどす。</h2>
+              </div>
+              <span class="time-pill">約20秒</span>
+            </div>
+
+            <div class="big-cipher" id="big-cipher" aria-label="暗号"></div>
+            <p class="puzzle-rule">ひらがなは五十音でひとつ前へ。英数字もひとつ前へ。</p>
+
+            <form id="answer-form" class="answer-form">
+              <label for="answer-input">わかった言葉</label>
+              <div class="input-with-button">
+                <input
+                  id="answer-input"
+                  name="answer"
+                  type="text"
+                  inputmode="text"
+                  autocomplete="off"
+                  maxlength="12"
+                  placeholder="ここに入力"
+                />
+                <button class="button button-primary" type="submit">ほどく</button>
+              </div>
+            </form>
+            <p id="answer-feedback" class="answer-feedback" aria-live="polite"></p>
+
+            <div class="hint-area">
+              <button id="hint-button" class="text-button" type="button">ヒントをひとつ見る</button>
+              <p id="hint-text" class="hint-text" aria-live="polite"></p>
+            </div>
+
+            <div class="no-pressure">
+              <span aria-hidden="true">◌</span>
+              <p><strong>いま解かなくても大丈夫。</strong><br />閉じても、送り手には伝わりません。</p>
+            </div>
+          </article>
+
+          <article class="reveal-panel" id="reveal-panel" hidden>
+            <div class="reveal-confetti" aria-hidden="true"><span>✦</span><span>·</span><span>○</span></div>
+            <p class="panel-label">みつけた。</p>
+            <div id="reveal-visual" class="reveal-visual"></div>
+            <blockquote id="reveal-message"></blockquote>
+            <p id="reveal-note" class="reveal-note"></p>
+            <div class="conversation-starter">
+              <span aria-hidden="true">↳</span>
+              <p><strong>もし話したくなったら</strong><br /><span id="starter-text"></span></p>
+            </div>
+            <button class="button button-ghost button-full" type="button" data-go-home>そっと閉じる</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="view create-view" id="create-view" aria-labelledby="create-title" hidden>
+        <div class="creator-shell wrap">
+          <div class="creator-heading">
+            <button class="back-button" type="button" data-go-home><span aria-hidden="true">←</span> もどる</button>
+            <p class="eyebrow"><span></span> MAKE YOUR CARD</p>
+            <h1 id="create-title">言うほどじゃないことを、<br />ひとつだけ。</h1>
+            <p>カードの内容はこのブラウザだけで処理します。共有リンクを知っている人には内容が見える可能性があるため、秘密情報には使わないでください。</p>
+          </div>
+
+          <form id="create-form" class="create-form">
+            <fieldset>
+              <legend><span>01</span> どんな話？</legend>
+              <div class="field-grid">
+                <label class="field">
+                  <span>中身の種類</span>
+                  <select id="create-category" required>
+                    <option value="つくったもの">つくったもの</option>
+                    <option value="できるようになったこと">できるようになったこと</option>
+                    <option value="今日うれしかったこと">今日うれしかったこと</option>
+                    <option value="最近好きなもの">最近好きなもの</option>
+                    <option value="小さな自己紹介">小さな自己紹介</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>あなたの呼び名 <small>任意</small></span>
+                  <input id="create-author" type="text" maxlength="12" placeholder="ゆか" />
+                </label>
+              </div>
+              <label class="field">
+                <span>表に見せるひとこと</span>
+                <input id="create-teaser" type="text" maxlength="42" required value="最近、ちょっとうれしかったこと。" />
+                <small><span id="teaser-count">19</span> / 42</small>
+              </label>
+              <label class="field">
+                <span>解いたあとに見せたいこと</span>
+                <textarea id="create-message" maxlength="100" rows="3" required placeholder="この服、じつは自分でつくった。"></textarea>
+                <small><span id="message-count">0</span> / 100</small>
+              </label>
+              <label class="field">
+                <span>写真 <small>任意・共有リンクに含まれます</small></span>
+                <span class="file-input">
+                  <input id="create-image" type="file" accept="image/jpeg,image/png,image/webp" />
+                  <span id="file-label">写真をえらぶ</span>
+                  <span aria-hidden="true">＋</span>
+                </span>
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend><span>02</span> あいことばを決める</legend>
+              <div class="field-grid field-grid-key">
+                <label class="field">
+                  <span>短いあいことば</span>
+                  <input id="create-key" type="text" maxlength="8" required value="ふく" />
+                  <small>ひらがな・英数字、2〜8文字がおすすめ</small>
+                </label>
+                <div class="cipher-preview" aria-live="polite">
+                  <span>暗号になると</span>
+                  <strong id="create-cipher-preview">へけ</strong>
+                </div>
+              </div>
+              <label class="field">
+                <span>もうひとつのヒント <small>任意</small></span>
+                <input id="create-hint" type="text" maxlength="36" value="身につけるもの" placeholder="身につけるもの" />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend><span>03</span> カードの色</legend>
+              <div class="color-options" role="radiogroup" aria-label="カードの色">
+                <label><input type="radio" name="theme" value="plum" checked /><span class="swatch swatch-plum"></span><span>すみれ</span></label>
+                <label><input type="radio" name="theme" value="green" /><span class="swatch swatch-green"></span><span>こけ</span></label>
+                <label><input type="radio" name="theme" value="blue" /><span class="swatch swatch-blue"></span><span>よあけ</span></label>
+                <label><input type="radio" name="theme" value="orange" /><span class="swatch swatch-orange"></span><span>みかん</span></label>
+              </div>
+            </fieldset>
+
+            <label class="agreement">
+              <input id="create-agreement" type="checkbox" required />
+              <span>見られても困らない内容だけを入れました</span>
+            </label>
+
+            <button class="button button-primary button-large button-full" type="submit">
+              カードをつくる <span aria-hidden="true">→</span>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <section class="view complete-view" id="complete-view" aria-labelledby="complete-title" hidden>
+        <div class="complete-shell">
+          <p class="eyebrow"><span></span> YOUR CARD IS READY</p>
+          <h1 id="complete-title">そっと置けるカードが<br />できました。</h1>
+          <div id="complete-card" class="mini-card"></div>
+          <div class="share-actions">
+            <button id="copy-link-button" class="button button-primary button-full" type="button">リンクをコピー</button>
+            <button id="preview-card-button" class="button button-ghost button-full" type="button">受け手の画面をためす</button>
+          </div>
+          <p id="copy-status" class="copy-status" aria-live="polite"></p>
+          <p class="share-note">URLの中にカードの内容が入ります。リンクを知っている人なら見られるため、機密情報には使わないでください。</p>
+          <button class="text-button" type="button" data-open-create>もう一枚つくる</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>言うほどじゃないけど。<span>— prototype 2026</span></p>
+      <p>解く自由も、解かない自由も。</p>
+    </footer>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
