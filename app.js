@@ -1,8 +1,8 @@
 const themeColors = {
-  plum: "#ff62c6",
-  green: "#caff38",
-  blue: "#7894ff",
-  orange: "#ff8a61",
+  plum: "#f8b8d2",
+  green: "#bfe8d8",
+  blue: "#b9d5f4",
+  orange: "#ffd1ad",
 };
 
 const puzzleTypes = {

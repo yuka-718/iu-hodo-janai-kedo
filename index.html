@@ -7,17 +7,20 @@
       name="description"
       content="言うほどじゃないけど。ちょっと知ってほしいことを、解ける秘密にするコミュニケーション・プロトタイプ。"
     />
-    <meta name="theme-color" content="#f2f2ef" />
+    <meta name="theme-color" content="#fff8fb" />
     <title>言うほどじゃないけど。</title>
-    <link rel="icon" href="./favicon.svg?v=5" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=5" />
+    <link rel="icon" href="./favicon.svg?v=6" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=6" />
+    <link rel="stylesheet" href="./cute.css?v=6" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
 
     <header class="site-header">
       <button class="wordmark" type="button" data-go-home aria-label="トップへ戻る">
-        <span class="wordmark-mark" aria-hidden="true">IH</span>
+        <span class="wordmark-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><ellipse cx="24" cy="12" rx="8" ry="11" /><ellipse cx="36" cy="24" rx="11" ry="8" /><ellipse cx="24" cy="36" rx="8" ry="11" /><ellipse cx="12" cy="24" rx="11" ry="8" /><circle cx="24" cy="24" r="6" /></svg>
+        </span>
         <span>言うほどじゃないけど。</span>
       </button>
       <div class="header-actions">
@@ -32,11 +35,12 @@
       <section class="view is-active" id="home-view" aria-labelledby="hero-title">
         <div class="hero wrap">
           <div class="hero-copy">
-            <p class="eyebrow"><span>01</span> PRIVATE SIGNAL</p>
+            <p class="eyebrow"><span>♡</span> 小さな話のために</p>
             <h1 id="hero-title" aria-label="言うほどじゃないけど、気づいてくれたらうれしい。">
               <span class="desktop-headline" aria-hidden="true">
                 <span class="headline-line">言うほどじゃないけど、</span>
-                <em class="headline-line">気づいてくれたらうれしい。</em>
+                <em class="headline-line">気づいてくれたら</em>
+                <em class="headline-line">うれしい。</em>
               </span>
               <span class="mobile-headline" aria-hidden="true">
                 <span class="headline-line">言うほどじゃないけど、</span>
@@ -62,30 +66,39 @@
           </div>
 
           <div class="hero-card-stage" aria-label="カードの見本">
-            <p class="stage-code" aria-hidden="true">IU HODO / 01</p>
+            <span class="stage-charm charm-flower" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><ellipse cx="24" cy="12" rx="8" ry="11" /><ellipse cx="36" cy="24" rx="11" ry="8" /><ellipse cx="24" cy="36" rx="8" ry="11" /><ellipse cx="12" cy="24" rx="11" ry="8" /><circle cx="24" cy="24" r="6" /></svg>
+            </span>
+            <span class="stage-charm charm-heart" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><path d="M24 40S7 30 7 17c0-8 10-12 17-4 7-8 17-4 17 4 0 13-17 23-17 23Z" /></svg>
+            </span>
+            <span class="stage-charm charm-star" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><path d="m24 5 5 13 14 6-14 6-5 13-5-13-14-6 14-6 5-13Z" /></svg>
+            </span>
             <article class="secret-card secret-card-preview">
-              <div class="card-topline">
-                <span class="category-pill">つくったもの</span>
-                <span class="quiet-label">from 匿名</span>
+              <div class="preview-symbol-row" aria-hidden="true">
+                <span class="preview-symbol preview-symbol-flower">
+                  <svg viewBox="0 0 48 48"><ellipse cx="24" cy="12" rx="8" ry="11" /><ellipse cx="36" cy="24" rx="11" ry="8" /><ellipse cx="24" cy="36" rx="8" ry="11" /><ellipse cx="12" cy="24" rx="11" ry="8" /><circle cx="24" cy="24" r="6" /></svg>
+                </span>
+                <span class="preview-symbol preview-symbol-envelope">
+                  <svg viewBox="0 0 48 48"><rect x="6" y="10" width="36" height="28" rx="8" /><path d="m10 15 14 11 14-11" /></svg>
+                </span>
               </div>
               <div class="card-pictogram" aria-hidden="true">
                 <svg viewBox="0 0 120 120" role="presentation">
                   <path d="M40 23 20 35l10 24 12-5v43h36V54l12 5 10-24-20-12-9 12H49L40 23Z" />
                   <path d="M49 35c2 8 20 8 22 0" />
                 </svg>
-                <span>MADE BY ME</span>
               </div>
-              <p class="card-kicker">ちょっとうれしかったこと。</p>
-              <div class="cipher-row" aria-label="暗号：へ、け">
-                <span>へ</span><span>け</span>
+              <div class="preview-cipher" aria-hidden="true">
+                <span><svg viewBox="0 0 48 48"><path d="M24 39S8 30 8 18c0-8 10-11 16-4 6-7 16-4 16 4 0 12-16 21-16 21Z" /></svg></span>
+                <span><svg viewBox="0 0 48 48"><path d="M6 28c6-10 12-10 18 0s12 10 18 0" /></svg></span>
+                <span><svg viewBox="0 0 48 48"><path d="m24 8 4 11 11 5-11 5-4 11-4-11-11-5 11-5 4-11Z" /></svg></span>
               </div>
-              <p class="cipher-caption">ひとつ前にもどしてね</p>
-              <button class="card-open-button" type="button" data-open-sample>
-                このカードをひらく <span aria-hidden="true">↗</span>
+              <button class="preview-open-button" type="button" data-open-sample aria-label="サンプルカードをひらく">
+                <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 24h25M27 15l9 9-9 9" /></svg>
               </button>
             </article>
-            <p class="stage-note note-one">DISCOVER</p>
-            <p class="stage-note note-two">NO REPLY NEEDED</p>
           </div>
         </div>
       </section>
@@ -317,10 +330,10 @@
             <fieldset>
               <legend><span>04</span> カードの色</legend>
               <div class="color-options" role="radiogroup" aria-label="カードの色">
-                <label><input type="radio" name="theme" value="plum" checked /><span class="swatch swatch-plum"></span><span>PINK</span></label>
-                <label><input type="radio" name="theme" value="green" /><span class="swatch swatch-green"></span><span>LIME</span></label>
-                <label><input type="radio" name="theme" value="blue" /><span class="swatch swatch-blue"></span><span>BLUE</span></label>
-                <label><input type="radio" name="theme" value="orange" /><span class="swatch swatch-orange"></span><span>ORANGE</span></label>
+                <label><input type="radio" name="theme" value="plum" checked /><span class="swatch swatch-plum"></span><span>もも</span></label>
+                <label><input type="radio" name="theme" value="green" /><span class="swatch swatch-green"></span><span>ミント</span></label>
+                <label><input type="radio" name="theme" value="blue" /><span class="swatch swatch-blue"></span><span>そら</span></label>
+                <label><input type="radio" name="theme" value="orange" /><span class="swatch swatch-orange"></span><span>あんず</span></label>
               </div>
             </fieldset>
 
@@ -358,6 +371,6 @@
       <p>解く自由も、解かない自由も。</p>
     </footer>
 
-    <script src="./app.js?v=5" defer></script>
+    <script src="./app.js?v=6" defer></script>
   </body>
 </html>
