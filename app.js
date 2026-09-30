@@ -1,15 +1,3 @@
-const sampleCard = {
-  version: 1,
-  author: "ゆか",
-  category: "つくったもの",
-  teaser: "ちょっとうれしかったこと。",
-  message: "この服、じつは自分でつくった。",
-  key: "ふく",
-  hint: "身につけるもの",
-  theme: "plum",
-  image: "",
-};
-
 const themeColors = {
   plum: "#d88fb3",
   green: "#97c9b7",
@@ -17,27 +5,77 @@ const themeColors = {
   orange: "#f2a37d",
 };
 
+const puzzleTypes = {
+  shift: { label: "かんたん · ひとつずらし", title: "ひとつ前にもどしてね。", rule: "五十音で、ひとつ前にもどします。", time: "約10秒" },
+  reverse: { label: "かんたん · さかさ文字", title: "後ろから読んでね。", rule: "右から左へ読む暗号です。", time: "約10秒" },
+  morse: { label: "ふつう · モールス信号", title: "トン・ツーを読んでね。", rule: "・がトン、－がツー。和文モールスです。", time: "約30秒" },
+  unicode: { label: "専門的 · Unicode", title: "文字コードを解いてね。", rule: "例：U+3042 は「あ」。コードポイントの暗号です。", time: "約40秒" },
+};
+
+const sampleCard = {
+  version: 2,
+  author: "",
+  category: "つくったもの",
+  teaser: "ちょっとうれしかったこと。",
+  message: "この服、じつは自分でつくった。",
+  key: "ふく",
+  hint: "身につけるもの",
+  puzzle: "shift",
+  visibility: "limited",
+  theme: "plum",
+  image: "",
+};
+
+const publicSamples = [
+  { version: 2, author: "mio", category: "最近好きなもの", teaser: "最近好きなもの。", message: "朝の散歩で見つける、小さな花が好き。", key: "はな", hint: "道ばたに咲いているもの", puzzle: "reverse", visibility: "public", theme: "green", image: "" },
+  { version: 2, author: "", category: "できるようになったこと", teaser: "できるようになったこと。", message: "最近、ラテアートが少しできるようになった。", key: "らて", hint: "カフェにあるもの", puzzle: "morse", visibility: "public", theme: "orange", image: "" },
+  { version: 2, author: "sora", category: "ひそかな特技", teaser: "ひそかな特技。", message: "地図を一度見ると、道をだいたい覚えられる。", key: "みち", hint: "歩くところ", puzzle: "unicode", visibility: "public", theme: "blue", image: "" },
+  { version: 2, author: "", category: "がんばったこと", teaser: "がんばったこと。", message: "ずっと苦手だった曲を、最後まで弾けた。", key: "ぴあの", hint: "鍵盤のある楽器", puzzle: "shift", visibility: "public", theme: "plum", image: "" },
+  { version: 2, author: "nagi", category: "おすすめしたいもの", teaser: "おすすめしたいもの。", message: "雨の日に読む短編小説が、じつはかなり好き。", key: "ほん", hint: "読むもの", puzzle: "reverse", visibility: "public", theme: "green", image: "" },
+  { version: 2, author: "", category: "伝えたいありがとう", teaser: "伝えたいありがとう。", message: "いつも話を聞いてくれて、ありがとう。", key: "きく", hint: "耳ですること", puzzle: "morse", visibility: "public", theme: "orange", image: "" },
+];
+
 const kana = [
-  ..."あいうえお",
-  ..."かきくけこ",
-  ..."さしすせそ",
-  ..."たちつてと",
-  ..."なにぬねの",
-  ..."はひふへほ",
-  ..."まみむめも",
-  ..."やゆよ",
-  ..."らりるれろ",
-  ..."わをん",
-  ..."がぎぐげご",
-  ..."ざじずぜぞ",
-  ..."だぢづでど",
-  ..."ばびぶべぼ",
-  ..."ぱぴぷぺぽ",
+  ..."あいうえお", ..."かきくけこ", ..."さしすせそ", ..."たちつてと", ..."なにぬねの",
+  ..."はひふへほ", ..."まみむめも", ..."やゆよ", ..."らりるれろ", ..."わをん",
+  ..."がぎぐげご", ..."ざじずぜぞ", ..."だぢづでど", ..."ばびぶべぼ", ..."ぱぴぷぺぽ",
   ..."ぁぃぅぇぉゃゅょっ",
 ];
 
+const wabunMorse = {
+  あ: "－－・－－", い: "・－", う: "・・－", え: "－・－－－", お: "・－・・・",
+  か: "・－・・", き: "－・－・・", く: "・・・－", け: "－・－－", こ: "－－－－",
+  さ: "－・－・－", し: "－－・－・", す: "－－－・－", せ: "・－－－・", そ: "－－－・",
+  た: "－・", ち: "・・－・", つ: "・－－・", て: "・－・－－", と: "・・－・・",
+  な: "・－・", に: "－・－・", ぬ: "・・・・", ね: "－－・－", の: "・・－－",
+  は: "－・・・", ひ: "－－・・－", ふ: "－－・・", へ: "・", ほ: "－・・",
+  ま: "－・・－", み: "・・－・－", む: "－", め: "－・・・－", も: "－・・－・",
+  や: "・－－", ゆ: "－・・－－", よ: "－－",
+  ら: "・・・", り: "－－・", る: "－・－－・", れ: "－－－", ろ: "・－・－・",
+  わ: "－・－", を: "・－－－", ん: "・－・－",
+};
+
+const latinMorse = {
+  a: "・－", b: "－・・・", c: "－・－・", d: "－・・", e: "・", f: "・・－・",
+  g: "－－・", h: "・・・・", i: "・・", j: "・－－－", k: "－・－", l: "・－・・",
+  m: "－－", n: "－・", o: "－－－", p: "・－－・", q: "－－・－", r: "・－・",
+  s: "・・・", t: "－", u: "・・－", v: "・・・－", w: "・－－", x: "－・・－",
+  y: "－・－－", z: "－－・・", 0: "－－－－－", 1: "・－－－－", 2: "・・－－－",
+  3: "・・・－－", 4: "・・・・－", 5: "・・・・・", 6: "－・・・・", 7: "－－・・・",
+  8: "－－－・・", 9: "－－－－・",
+};
+
+const voicedKana = {
+  が: "か", ぎ: "き", ぐ: "く", げ: "け", ご: "こ", ざ: "さ", じ: "し", ず: "す", ぜ: "せ", ぞ: "そ",
+  だ: "た", ぢ: "ち", づ: "つ", で: "て", ど: "と", ば: "は", び: "ひ", ぶ: "ふ", べ: "へ", ぼ: "ほ",
+};
+const halfVoicedKana = { ぱ: "は", ぴ: "ひ", ぷ: "ふ", ぺ: "へ", ぽ: "ほ" };
+const smallKana = { ぁ: "あ", ぃ: "い", ぅ: "う", ぇ: "え", ぉ: "お", ゃ: "や", ゅ: "ゆ", ょ: "よ", っ: "つ" };
+const PUBLIC_STORAGE_KEY = "iu-hodo-public-cards-v1";
+
 const views = [...document.querySelectorAll(".view")];
 const homeView = document.querySelector("#home-view");
+const feedView = document.querySelector("#feed-view");
 const readerView = document.querySelector("#reader-view");
 const createView = document.querySelector("#create-view");
 const completeView = document.querySelector("#complete-view");
@@ -48,39 +86,79 @@ let activeCard = sampleCard;
 let createdCard = null;
 let createdLink = "";
 let hintLevel = 0;
+let readerReturn = "home";
+
+function katakanaToHiragana(value) {
+  return String(value).replace(/[ァ-ヶ]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0x60));
+}
+
+function normalizeAnswer(value) {
+  return katakanaToHiragana(String(value).normalize("NFKC").trim().toLowerCase()).replace(/\s+/g, "");
+}
 
 function shiftCharacter(character, amount = 1) {
   const hiraganaCharacter = katakanaToHiragana(character);
   const kanaIndex = kana.indexOf(hiraganaCharacter);
-  if (kanaIndex >= 0) {
-    return kana[(kanaIndex + amount + kana.length) % kana.length];
-  }
-
+  if (kanaIndex >= 0) return kana[(kanaIndex + amount + kana.length) % kana.length];
   if (/[a-z]/i.test(character)) {
     const isUppercase = character === character.toUpperCase();
     const start = isUppercase ? 65 : 97;
     return String.fromCharCode(((character.charCodeAt(0) - start + amount + 26) % 26) + start);
   }
-
-  if (/\d/.test(character)) {
-    return String((Number(character) + amount + 10) % 10);
-  }
-
+  if (/\d/.test(character)) return String((Number(character) + amount + 10) % 10);
   return character;
 }
 
-function encodeKey(key) {
-  return [...normalizeAnswer(key)].map((character) => shiftCharacter(character, 1)).join("");
+function toMorse(character) {
+  const normalized = katakanaToHiragana(character).toLowerCase();
+  if (wabunMorse[normalized]) return wabunMorse[normalized];
+  if (voicedKana[normalized]) return `${wabunMorse[voicedKana[normalized]]} ・・`;
+  if (halfVoicedKana[normalized]) return `${wabunMorse[halfVoicedKana[normalized]]} ・・－－・`;
+  if (smallKana[normalized]) return wabunMorse[smallKana[normalized]];
+  if (latinMorse[normalized]) return latinMorse[normalized];
+  return `U+${normalized.codePointAt(0).toString(16).toUpperCase()}`;
 }
 
-function katakanaToHiragana(value) {
-  return String(value).replace(/[ァ-ヶ]/g, (character) =>
-    String.fromCharCode(character.charCodeAt(0) - 0x60),
-  );
+function cipherTokens(key, puzzle = "shift") {
+  const characters = [...normalizeAnswer(key)];
+  if (puzzle === "reverse") return characters.reverse();
+  if (puzzle === "morse") return characters.map(toMorse);
+  if (puzzle === "unicode") return characters.map((character) => `U+${character.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`);
+  return characters.map((character) => shiftCharacter(character, 1));
 }
 
-function normalizeAnswer(value) {
-  return katakanaToHiragana(String(value).normalize("NFKC").trim().toLowerCase()).replace(/\s+/g, "");
+function encodeKey(key, puzzle = "shift") {
+  const separator = puzzle === "morse" ? " / " : puzzle === "unicode" ? "  " : "";
+  return cipherTokens(key, puzzle).join(separator);
+}
+
+function teaserForCategory(category) {
+  const exact = {
+    つくったもの: "つくったものの話。", できるようになったこと: "できるようになったこと。",
+    今日うれしかったこと: "今日うれしかったこと。", 最近好きなもの: "最近好きなもの。",
+    小さな自己紹介: "小さな自己紹介。", がんばったこと: "がんばったこと。",
+    ひそかな特技: "ひそかな特技。", おすすめしたいもの: "おすすめしたいもの。",
+    行ってみた場所: "行ってみた場所。", はじめてやったこと: "はじめてやったこと。",
+    伝えたいありがとう: "伝えたいありがとう。",
+  };
+  return exact[category] || `${category}の話。`;
+}
+
+function normalizeCard(card) {
+  const category = String(card.category || "小さな自己紹介").slice(0, 24);
+  return {
+    version: 2,
+    author: String(card.author || "").slice(0, 12),
+    category,
+    teaser: String(card.teaser || teaserForCategory(category)).slice(0, 42),
+    message: String(card.message || "").slice(0, 100),
+    key: String(card.key || "").slice(0, 12),
+    hint: String(card.hint || "").slice(0, 36),
+    puzzle: puzzleTypes[card.puzzle] ? card.puzzle : "shift",
+    visibility: card.visibility === "public" ? "public" : "limited",
+    theme: themeColors[card.theme] ? card.theme : "plum",
+    image: typeof card.image === "string" && card.image.startsWith("data:image/") ? card.image : "",
+  };
 }
 
 function showView(view) {
@@ -89,35 +167,45 @@ function showView(view) {
     candidate.hidden = !isActive;
     candidate.classList.toggle("is-active", isActive);
   });
-
   const isFocusedExperience = view === readerView || view === completeView;
   siteHeader.hidden = isFocusedExperience;
   siteFooter.hidden = isFocusedExperience;
-  window.scrollTo({ top: 0, behavior: "instant" });
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function clearCardHash() {
+  if (location.hash.startsWith("#card=")) history.replaceState(null, "", location.pathname + location.search);
 }
 
 function openHome({ clearHash = true } = {}) {
-  if (clearHash && location.hash.startsWith("#card=")) {
-    history.replaceState(null, "", location.pathname + location.search);
-  }
+  if (clearHash) clearCardHash();
   showView(homeView);
 }
 
 function openCreator() {
-  if (location.hash.startsWith("#card=")) {
-    history.replaceState(null, "", location.pathname + location.search);
-  }
+  clearCardHash();
   showView(createView);
   setTimeout(() => document.querySelector("#create-category")?.focus(), 0);
 }
 
-function openReader(card) {
-  activeCard = card;
-  hintLevel = 0;
+function openFeed() {
+  clearCardHash();
+  renderPublicFeed();
+  showView(feedView);
+}
 
-  document.querySelector("#reader-from").textContent = card.author ? `from ${card.author}` : "from someone";
-  document.querySelector("#reader-title").textContent = card.teaser;
-  document.querySelector("#reader-category").textContent = card.category;
+function openReader(card, origin = "home") {
+  activeCard = normalizeCard(card);
+  readerReturn = origin;
+  hintLevel = 0;
+  const meta = puzzleTypes[activeCard.puzzle];
+  document.querySelector("#reader-from").textContent = `from ${activeCard.author || "匿名"}`;
+  document.querySelector("#reader-title").textContent = activeCard.teaser;
+  document.querySelector("#reader-category").textContent = activeCard.category;
+  document.querySelector("#puzzle-label").textContent = meta.label;
+  document.querySelector("#puzzle-title").textContent = meta.title;
+  document.querySelector("#puzzle-rule").textContent = meta.rule;
+  document.querySelector(".time-pill").textContent = meta.time;
   document.querySelector("#answer-input").value = "";
   document.querySelector("#answer-feedback").textContent = "";
   document.querySelector("#answer-feedback").classList.remove("is-right");
@@ -128,16 +216,16 @@ function openReader(card) {
   document.querySelector("#puzzle-panel").hidden = false;
   document.querySelector("#reveal-panel").hidden = true;
 
-  const cipher = encodeKey(card.key);
+  const tokens = cipherTokens(activeCard.key, activeCard.puzzle);
   const cipherContainer = document.querySelector("#big-cipher");
   cipherContainer.replaceChildren();
-  [...cipher].forEach((character) => {
+  cipherContainer.className = `big-cipher is-${activeCard.puzzle}`;
+  tokens.forEach((token) => {
     const tile = document.createElement("span");
-    tile.textContent = character;
+    tile.textContent = token;
     cipherContainer.append(tile);
   });
-  cipherContainer.setAttribute("aria-label", `暗号：${[...cipher].join("、")}`);
-
+  cipherContainer.setAttribute("aria-label", `暗号：${tokens.join("、")}`);
   showView(readerView);
   setTimeout(() => document.querySelector("#answer-input")?.focus(), 120);
 }
@@ -146,13 +234,11 @@ function revealCard() {
   const puzzlePanel = document.querySelector("#puzzle-panel");
   const revealPanel = document.querySelector("#reveal-panel");
   const visual = document.querySelector("#reveal-visual");
-
   puzzlePanel.hidden = true;
   revealPanel.hidden = false;
   visual.replaceChildren();
   visual.className = "reveal-visual";
   visual.style.setProperty("--card-color", themeColors[activeCard.theme] || themeColors.plum);
-
   if (activeCard.image?.startsWith("data:image/")) {
     const image = document.createElement("img");
     image.src = activeCard.image;
@@ -161,7 +247,6 @@ function revealCard() {
   } else {
     visual.classList.add("is-default");
   }
-
   document.querySelector("#reveal-message").textContent = activeCard.message;
   document.querySelector("#starter-text").textContent = conversationStarter(activeCard.category);
   revealPanel.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -169,37 +254,26 @@ function revealCard() {
 
 function conversationStarter(category) {
   const starters = {
-    つくったもの: "「これ、どうやってつくったの？」",
-    できるようになったこと: "「いつから練習してたの？」",
-    今日うれしかったこと: "「どんなところがうれしかった？」",
-    最近好きなもの: "「どこがいちばん好き？」",
-    小さな自己紹介: "「もう少し聞いてもいい？」",
+    つくったもの: "「これ、どうやってつくったの？」", できるようになったこと: "「いつから練習してたの？」",
+    今日うれしかったこと: "「どんなところがうれしかった？」", 最近好きなもの: "「どこがいちばん好き？」",
+    がんばったこと: "「どんなところをがんばったの？」", ひそかな特技: "「いつ気づいたの？」",
+    おすすめしたいもの: "「どこがおすすめ？」", 行ってみた場所: "「どんな場所だった？」",
+    はじめてやったこと: "「やってみてどうだった？」", 伝えたいありがとう: "「その話、もう少し聞いてもいい？」",
   };
   return starters[category] || "「もう少し聞いてもいい？」";
 }
 
 function hintMessage(level) {
   const key = normalizeAnswer(activeCard.key);
-  const cipher = encodeKey(key);
-
-  if (level === 1) {
-    return activeCard.hint ? `ヒント：${activeCard.hint}` : `最初の「${[...cipher][0]}」は「${[...key][0]}」です。`;
-  }
-
-  if (level === 2) {
-    return `「${[...cipher][0]}」は「${[...key][0]}」。全部で${[...key].length}文字です。`;
-  }
-
+  if (level === 1) return activeCard.hint ? `ヒント：${activeCard.hint}` : puzzleTypes[activeCard.puzzle].rule;
+  if (level === 2) return `答えは${[...key].length}文字。最初は「${[...key][0]}」です。`;
   return `答えは「${key}」。そのままひらけます。`;
 }
 
 function encodeCard(card) {
-  const json = JSON.stringify(card);
-  const bytes = new TextEncoder().encode(json);
+  const bytes = new TextEncoder().encode(JSON.stringify(card));
   let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
@@ -207,46 +281,76 @@ function decodeCard(encoded) {
   const padded = encoded.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((encoded.length + 3) % 4);
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  const card = JSON.parse(new TextDecoder().decode(bytes));
+  const card = normalizeCard(JSON.parse(new TextDecoder().decode(bytes)));
+  if (!card.message || !card.key) throw new Error("Invalid card");
+  return card;
+}
 
-  if (!card || typeof card !== "object" || !card.teaser || !card.message || !card.key) {
-    throw new Error("Invalid card");
+function loadStoredPublicCards() {
+  try {
+    const cards = JSON.parse(localStorage.getItem(PUBLIC_STORAGE_KEY) || "[]");
+    return Array.isArray(cards) ? cards.map(normalizeCard).filter((card) => card.message && card.key) : [];
+  } catch {
+    return [];
   }
+}
 
-  return {
-    version: 1,
-    author: String(card.author || "").slice(0, 12),
-    category: String(card.category || "小さな自己紹介").slice(0, 24),
-    teaser: String(card.teaser).slice(0, 42),
-    message: String(card.message).slice(0, 100),
-    key: String(card.key).slice(0, 12),
-    hint: String(card.hint || "").slice(0, 36),
-    theme: themeColors[card.theme] ? card.theme : "plum",
-    image: typeof card.image === "string" && card.image.startsWith("data:image/") ? card.image : "",
-  };
+function storePublicCard(card) {
+  const cards = loadStoredPublicCards();
+  const compactCard = { ...card, image: card.image?.length > 70000 ? "" : card.image };
+  try {
+    localStorage.setItem(PUBLIC_STORAGE_KEY, JSON.stringify([compactCard, ...cards].slice(0, 12)));
+  } catch {
+    localStorage.setItem(PUBLIC_STORAGE_KEY, JSON.stringify([{ ...compactCard, image: "" }, ...cards.slice(0, 5)]));
+  }
+}
+
+function renderPublicFeed() {
+  const feed = document.querySelector("#public-feed");
+  const cards = [...loadStoredPublicCards(), ...publicSamples];
+  feed.replaceChildren();
+  cards.forEach((card, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "feed-card";
+    button.style.setProperty("--feed-color", themeColors[card.theme] || themeColors.plum);
+    button.style.setProperty("--feed-delay", `${(index % 5) * -0.7}s`);
+    const top = document.createElement("span");
+    top.className = "feed-card-top";
+    const category = document.createElement("span");
+    category.className = "category-pill";
+    category.textContent = card.category;
+    const author = document.createElement("span");
+    author.className = "quiet-label";
+    author.textContent = `from ${card.author || "匿名"}`;
+    top.append(category, author);
+    const title = document.createElement("strong");
+    title.textContent = card.teaser;
+    const cipher = document.createElement("span");
+    cipher.className = "feed-cipher";
+    cipher.textContent = encodeKey(card.key, card.puzzle);
+    const bottom = document.createElement("span");
+    bottom.className = "feed-card-bottom";
+    bottom.textContent = `${puzzleTypes[card.puzzle].label}  ↗`;
+    button.append(top, title, cipher, bottom);
+    button.addEventListener("click", () => openReader(card, "feed"));
+    feed.append(button);
+  });
 }
 
 async function compressImage(file) {
   if (!file) return "";
   if (!file.type.startsWith("image/")) throw new Error("画像ファイルを選んでください。");
-
   const bitmap = await createImageBitmap(file);
-  const maxDimension = 560;
-  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, 560 / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
   canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  const context = canvas.getContext("2d");
-  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-
   let dataUrl = canvas.toDataURL("image/webp", 0.7);
-  if (dataUrl.length > 90000) {
-    dataUrl = canvas.toDataURL("image/jpeg", 0.48);
-  }
-  if (dataUrl.length > 125000) {
-    throw new Error("写真が大きすぎます。別の写真を選んでください。");
-  }
+  if (dataUrl.length > 90000) dataUrl = canvas.toDataURL("image/jpeg", 0.48);
+  if (dataUrl.length > 125000) throw new Error("写真が大きすぎます。別の写真を選んでください。");
   return dataUrl;
 }
 
@@ -255,29 +359,49 @@ function renderCompleteCard(card) {
   container.style.background = themeColors[card.theme] || themeColors.plum;
   container.replaceChildren();
   const meta = document.createElement("p");
-  meta.textContent = `${card.category}${card.author ? `  ·  from ${card.author}` : ""}`;
+  meta.textContent = `${card.category}  ·  from ${card.author || "匿名"}`;
   const title = document.createElement("strong");
   title.textContent = card.teaser;
   container.append(meta, title);
+  const isPublic = card.visibility === "public";
+  document.querySelector("#complete-title").textContent = isPublic ? "みんなに流すカードが\nできました。" : "限定公開のカードが\nできました。";
+  document.querySelector("#copy-link-button").textContent = isPublic ? "カードのURLをコピー" : "限定URLをコピー";
+  document.querySelector("#view-feed-button").hidden = !isPublic;
+  document.querySelector("#share-note").textContent = isPublic ? "公開フィードとURLの両方から見られます。" : "このURLを知っている人だけがカードを開けます。";
 }
 
-document.querySelectorAll("[data-go-home]").forEach((button) => {
-  button.addEventListener("click", () => openHome());
-});
+function selectedPuzzle() {
+  return document.querySelector('input[name="puzzle"]:checked').value;
+}
 
-document.querySelectorAll("[data-open-create]").forEach((button) => {
-  button.addEventListener("click", openCreator);
-});
+function updateCipherPreview() {
+  document.querySelector("#create-cipher-preview").textContent = encodeKey(document.querySelector("#create-key").value, selectedPuzzle()) || "—";
+}
 
-document.querySelectorAll("[data-open-sample]").forEach((button) => {
-  button.addEventListener("click", () => openReader(sampleCard));
-});
+function syncCategoryField() {
+  const isOther = document.querySelector("#create-category").value === "その他";
+  const input = document.querySelector("#create-custom-category");
+  document.querySelector("#custom-category-field").hidden = !isOther;
+  input.required = isOther;
+  if (!isOther) input.value = "";
+}
+
+function syncAnonymousField() {
+  const anonymous = document.querySelector("#create-anonymous").checked;
+  document.querySelector("#author-field").hidden = anonymous;
+  if (anonymous) document.querySelector("#create-author").value = "";
+}
+
+document.querySelectorAll("[data-go-home]").forEach((button) => button.addEventListener("click", () => openHome()));
+document.querySelectorAll("[data-reader-back]").forEach((button) => button.addEventListener("click", () => (readerReturn === "feed" ? openFeed() : openHome())));
+document.querySelectorAll("[data-open-create]").forEach((button) => button.addEventListener("click", openCreator));
+document.querySelectorAll("[data-open-feed]").forEach((button) => button.addEventListener("click", openFeed));
+document.querySelectorAll("[data-open-sample]").forEach((button) => button.addEventListener("click", () => openReader(sampleCard)));
 
 document.querySelector("#answer-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const answer = normalizeAnswer(document.querySelector("#answer-input").value);
   const feedback = document.querySelector("#answer-feedback");
-
   if (answer === normalizeAnswer(activeCard.key)) {
     feedback.textContent = "ほどけた！";
     feedback.classList.add("is-right");
@@ -292,7 +416,6 @@ document.querySelector("#hint-button").addEventListener("click", () => {
   hintLevel = Math.min(3, hintLevel + 1);
   document.querySelector("#hint-text").textContent = hintMessage(hintLevel);
   const button = document.querySelector("#hint-button");
-
   if (hintLevel < 3) {
     button.textContent = "もうひとつ見る";
   } else {
@@ -304,7 +427,6 @@ document.querySelector("#hint-button").addEventListener("click", () => {
   }
 });
 
-const teaserInput = document.querySelector("#create-teaser");
 const messageInput = document.querySelector("#create-message");
 const keyInput = document.querySelector("#create-key");
 const imageInput = document.querySelector("#create-image");
@@ -313,15 +435,12 @@ function updateCount(input, output) {
   document.querySelector(output).textContent = [...input.value].length;
 }
 
-teaserInput.addEventListener("input", () => updateCount(teaserInput, "#teaser-count"));
 messageInput.addEventListener("input", () => updateCount(messageInput, "#message-count"));
-keyInput.addEventListener("input", () => {
-  document.querySelector("#create-cipher-preview").textContent = encodeKey(keyInput.value) || "—";
-});
-
-imageInput.addEventListener("change", () => {
-  document.querySelector("#file-label").textContent = imageInput.files[0]?.name || "写真をえらぶ";
-});
+keyInput.addEventListener("input", updateCipherPreview);
+document.querySelectorAll('input[name="puzzle"]').forEach((input) => input.addEventListener("change", updateCipherPreview));
+document.querySelector("#create-category").addEventListener("change", syncCategoryField);
+document.querySelector("#create-anonymous").addEventListener("change", syncAnonymousField);
+imageInput.addEventListener("change", () => { document.querySelector("#file-label").textContent = imageInput.files[0]?.name || "写真をえらぶ"; });
 
 document.querySelector("#create-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -329,7 +448,6 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
   const originalText = submitButton.innerHTML;
   submitButton.disabled = true;
   submitButton.textContent = "カードをつくっています…";
-
   try {
     const normalizedKey = normalizeAnswer(keyInput.value);
     if ([...normalizedKey].length < 2) {
@@ -338,22 +456,24 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
       return;
     }
     keyInput.setCustomValidity("");
-
+    const categorySelect = document.querySelector("#create-category");
+    const category = categorySelect.value === "その他" ? document.querySelector("#create-custom-category").value.trim() : categorySelect.value;
     const image = await compressImage(imageInput.files[0]);
-    createdCard = {
-      version: 1,
-      author: document.querySelector("#create-author").value.trim(),
-      category: document.querySelector("#create-category").value,
-      teaser: teaserInput.value.trim(),
+    createdCard = normalizeCard({
+      version: 2,
+      author: document.querySelector("#create-anonymous").checked ? "" : document.querySelector("#create-author").value.trim(),
+      category,
+      teaser: teaserForCategory(category),
       message: messageInput.value.trim(),
       key: normalizedKey,
       hint: document.querySelector("#create-hint").value.trim(),
+      puzzle: selectedPuzzle(),
+      visibility: document.querySelector('input[name="visibility"]:checked').value,
       theme: document.querySelector('input[name="theme"]:checked').value,
       image,
-    };
-
-    const encoded = encodeCard(createdCard);
-    createdLink = `${location.origin}${location.pathname}#card=${encoded}`;
+    });
+    if (createdCard.visibility === "public") storePublicCard(createdCard);
+    createdLink = `${location.origin}${location.pathname}#card=${encodeCard(createdCard)}`;
     renderCompleteCard(createdCard);
     document.querySelector("#copy-status").textContent = "";
     showView(completeView);
@@ -369,9 +489,9 @@ document.querySelector("#copy-link-button").addEventListener("click", async () =
   const status = document.querySelector("#copy-status");
   try {
     await navigator.clipboard.writeText(createdLink);
-    status.textContent = "リンクをコピーしました。そっと渡してみてください。";
+    status.textContent = "URLをコピーしました。";
   } catch {
-    window.prompt("このリンクをコピーしてください", createdLink);
+    window.prompt("このURLをコピーしてください", createdLink);
   }
 });
 
@@ -379,20 +499,19 @@ document.querySelector("#preview-card-button").addEventListener("click", () => {
   history.replaceState(null, "", `#card=${encodeCard(createdCard)}`);
   openReader(createdCard);
 });
+document.querySelector("#view-feed-button").addEventListener("click", openFeed);
 
 window.addEventListener("hashchange", () => {
   if (!location.hash.startsWith("#card=")) return;
-  try {
-    openReader(decodeCard(location.hash.slice(6)));
-  } catch {
-    openHome({ clearHash: true });
-  }
+  try { openReader(decodeCard(location.hash.slice(6))); } catch { openHome({ clearHash: true }); }
 });
 
 function initialize() {
-  updateCount(teaserInput, "#teaser-count");
   updateCount(messageInput, "#message-count");
-
+  updateCipherPreview();
+  syncCategoryField();
+  syncAnonymousField();
+  renderPublicFeed();
   if (location.hash.startsWith("#card=")) {
     try {
       openReader(decodeCard(location.hash.slice(6)));
@@ -401,7 +520,6 @@ function initialize() {
       history.replaceState(null, "", location.pathname + location.search);
     }
   }
-
   openHome({ clearHash: false });
 }
 

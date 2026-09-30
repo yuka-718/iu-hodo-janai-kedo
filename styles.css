@@ -78,6 +78,28 @@ button {
   border-bottom: 1px solid var(--line);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.header-link {
+  padding: 8px 2px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.header-link:hover {
+  border-bottom-color: currentColor;
+  color: var(--plum-dark);
+}
+
 .wordmark {
   display: inline-flex;
   align-items: center;
@@ -670,6 +692,21 @@ p {
   font-size: 29px;
 }
 
+.big-cipher.is-morse span,
+.big-cipher.is-unicode span {
+  width: auto;
+  min-width: 112px;
+  padding: 0 15px;
+  font-family: var(--sans);
+  font-size: 16px;
+  letter-spacing: 0.05em;
+}
+
+.big-cipher.is-unicode span {
+  min-width: 120px;
+  font-size: 15px;
+}
+
 .puzzle-rule {
   margin-bottom: 38px;
   color: var(--muted);
@@ -858,6 +895,118 @@ select:focus {
   color: var(--ink);
 }
 
+.feed-view {
+  padding: 72px 0 120px;
+}
+
+.feed-shell {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.45fr) minmax(0, 1.55fr);
+  align-items: start;
+  gap: 72px;
+}
+
+.feed-heading {
+  position: sticky;
+  top: 32px;
+}
+
+.feed-heading .back-button {
+  margin-bottom: 64px;
+}
+
+.feed-heading h1 {
+  margin-bottom: 34px;
+  font-family: var(--serif);
+  font-size: clamp(34px, 4.2vw, 52px);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.public-feed {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.feed-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--feed-color) 35%, white);
+  border-radius: 28px;
+  color: var(--ink);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--feed-color) 18%, white), var(--white));
+  box-shadow: 0 18px 45px color-mix(in srgb, var(--feed-color) 15%, transparent);
+  text-align: left;
+  cursor: pointer;
+  animation: card-float 5s ease-in-out var(--feed-delay) infinite;
+}
+
+.feed-card:nth-child(3n + 2) { transform: rotate(1deg); }
+.feed-card:nth-child(3n) { transform: rotate(-1deg); }
+
+.feed-card::after {
+  position: absolute;
+  right: -52px;
+  bottom: -70px;
+  width: 180px;
+  height: 180px;
+  border: 1px solid color-mix(in srgb, var(--feed-color) 45%, white);
+  border-radius: 50%;
+  content: "";
+}
+
+.feed-card-top,
+.feed-card-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feed-card strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin: 30px 0 20px;
+  font-family: var(--serif);
+  font-size: 22px;
+  line-height: 1.55;
+}
+
+.feed-cipher {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  margin: auto 0 22px;
+  overflow: hidden;
+  color: var(--plum-dark);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-card-bottom {
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+@keyframes card-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
+}
+
 .creator-shell {
   display: grid;
   grid-template-columns: minmax(300px, 0.75fr) minmax(460px, 1.25fr);
@@ -941,6 +1090,39 @@ select:focus {
   gap: 16px;
 }
 
+.anonymous-choice {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 74px;
+  margin-bottom: 23px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 250, 252, 0.68);
+  cursor: pointer;
+}
+
+.anonymous-choice:has(input:checked) {
+  border-color: var(--plum);
+  background: #fcebf3;
+}
+
+.anonymous-choice input {
+  width: 20px;
+  min-height: 20px;
+  accent-color: var(--plum-dark);
+}
+
+.anonymous-choice > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.anonymous-choice strong { font-size: 12px; }
+.anonymous-choice small { color: var(--muted); font-size: 10px; }
+
 .file-input {
   display: flex !important;
   align-items: center;
@@ -984,9 +1166,104 @@ select:focus {
 }
 
 .cipher-preview strong {
+  max-width: 68%;
+  overflow: hidden;
   font-family: var(--serif);
-  font-size: 24px;
-  letter-spacing: 0.16em;
+  font-size: clamp(13px, 2vw, 24px);
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.puzzle-options,
+.visibility-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin: 0 0 24px;
+}
+
+.puzzle-options label,
+.visibility-options label {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 98px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 250, 252, 0.68);
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.puzzle-options label:has(input:checked),
+.visibility-options label:has(input:checked) {
+  border-color: var(--plum);
+  background: #fcebf3;
+  box-shadow: 0 0 0 2px rgba(216, 143, 179, 0.12);
+}
+
+.puzzle-options input,
+.visibility-options input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.puzzle-option-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.puzzle-option-top strong,
+.visibility-options strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.puzzle-option-top small {
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: var(--plum-dark);
+  background: white;
+  font-size: 8px;
+}
+
+.visibility-options label {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  align-items: center;
+  min-height: 92px;
+}
+
+.visibility-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: white;
+  background: var(--plum);
+  font-size: 18px;
+}
+
+.visibility-options label > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.prototype-note {
+  margin: -12px 0 0;
+  color: var(--muted);
+  font-size: 9px;
 }
 
 .color-options {
@@ -1061,6 +1338,10 @@ select:focus {
 
 .complete-shell .eyebrow {
   justify-content: center;
+}
+
+#complete-title {
+  white-space: pre-line;
 }
 
 .mini-card {
@@ -1184,9 +1465,18 @@ select:focus {
   }
 
   .principles,
+  .feed-shell,
   .creator-shell {
     grid-template-columns: 1fr;
     gap: 55px;
+  }
+
+  .feed-heading {
+    position: static;
+  }
+
+  .feed-heading .back-button {
+    margin-bottom: 45px;
   }
 
   .creator-heading {
@@ -1210,6 +1500,19 @@ select:focus {
 
   .wordmark {
     font-size: 14px;
+  }
+
+  .wordmark > span:last-child {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 9px;
+  }
+
+  .header-link,
+  .button-small {
+    font-size: 10px;
   }
 
   .hero {
@@ -1309,6 +1612,15 @@ select:focus {
     font-size: 24px;
   }
 
+  .big-cipher.is-morse span,
+  .big-cipher.is-unicode span {
+    width: auto;
+    min-width: 96px;
+    height: 54px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
   .input-with-button {
     grid-template-columns: 1fr;
   }
@@ -1316,6 +1628,23 @@ select:focus {
   .field-grid {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .feed-view {
+    padding: 50px 0 90px;
+  }
+
+  .public-feed {
+    grid-template-columns: 1fr;
+  }
+
+  .feed-card {
+    min-height: 235px;
+  }
+
+  .puzzle-options,
+  .visibility-options {
+    grid-template-columns: 1fr;
   }
 
   .color-options {
@@ -1336,6 +1665,7 @@ select:focus {
   *,
   *::before,
   *::after {
+    animation: none !important;
     scroll-behavior: auto !important;
     transition: none !important;
   }

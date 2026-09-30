@@ -7,10 +7,10 @@
       name="description"
       content="言うほどじゃないけど。ちょっと知ってほしいことを、解ける秘密にするコミュニケーション・プロトタイプ。"
     />
-    <meta name="theme-color" content="#f5efe3" />
+    <meta name="theme-color" content="#fff8f5" />
     <title>言うほどじゃないけど。</title>
-    <link rel="icon" href="./favicon.svg?v=2" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=2" />
+    <link rel="icon" href="./favicon.svg?v=3" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=3" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
@@ -20,9 +20,12 @@
         <span class="wordmark-mark" aria-hidden="true">、</span>
         <span>言うほどじゃないけど。</span>
       </button>
-      <button class="button button-small button-ghost" type="button" data-open-create>
-        カードをつくる
-      </button>
+      <div class="header-actions">
+        <button class="header-link" type="button" data-open-feed>みんなのカード</button>
+        <button class="button button-small button-ghost" type="button" data-open-create>
+          カードをつくる
+        </button>
+      </div>
     </header>
 
     <main>
@@ -64,7 +67,7 @@
             <article class="secret-card secret-card-preview">
               <div class="card-topline">
                 <span class="category-pill">つくったもの</span>
-                <span class="quiet-label">from ゆか</span>
+                <span class="quiet-label">from 匿名</span>
               </div>
               <div class="tiny-stitches" aria-hidden="true">· · · · · · ·</div>
               <p class="card-kicker">ちょっとうれしかったこと。</p>
@@ -82,9 +85,21 @@
         </div>
       </section>
 
+      <section class="view feed-view" id="feed-view" aria-labelledby="feed-title" hidden>
+        <div class="feed-shell wrap">
+          <div class="feed-heading">
+            <button class="back-button" type="button" data-go-home><span aria-hidden="true">←</span> もどる</button>
+            <p class="eyebrow"><span></span> PUBLIC CARDS</p>
+            <h1 id="feed-title">みんなの<br />言うほどじゃないこと。</h1>
+            <button class="button button-primary" type="button" data-open-create>自分も流してみる <span aria-hidden="true">＋</span></button>
+          </div>
+          <div id="public-feed" class="public-feed" aria-live="polite"></div>
+        </div>
+      </section>
+
       <section class="view reader-view" id="reader-view" aria-labelledby="reader-title" hidden>
         <div class="reader-shell">
-          <button class="back-button" type="button" data-go-home>
+          <button class="back-button" type="button" data-reader-back>
             <span aria-hidden="true">←</span> もどる
           </button>
 
@@ -98,14 +113,14 @@
           <article class="puzzle-panel" id="puzzle-panel">
             <div class="puzzle-header">
               <div>
-                <p class="panel-label">あいことば · 五十音</p>
-                <h2>暗号をほどいてね。</h2>
+                <p class="panel-label" id="puzzle-label">あいことば</p>
+                <h2 id="puzzle-title">暗号をほどいてね。</h2>
               </div>
               <span class="time-pill">約20秒</span>
             </div>
 
             <div class="big-cipher" id="big-cipher" aria-label="暗号"></div>
-            <p class="puzzle-rule">五十音で、ひとつ前にもどします。</p>
+            <p class="puzzle-rule" id="puzzle-rule"></p>
 
             <form id="answer-form" class="answer-form">
               <label for="answer-input">わかった言葉</label>
@@ -144,7 +159,7 @@
               <span aria-hidden="true">↳</span>
               <p><strong>もし話したくなったら</strong><br /><span id="starter-text"></span></p>
             </div>
-            <button class="button button-ghost button-full" type="button" data-go-home>そっと閉じる</button>
+            <button class="button button-ghost button-full" type="button" data-reader-back>そっと閉じる</button>
           </article>
         </div>
       </section>
@@ -170,17 +185,27 @@
                     <option value="今日うれしかったこと">今日うれしかったこと</option>
                     <option value="最近好きなもの">最近好きなもの</option>
                     <option value="小さな自己紹介">小さな自己紹介</option>
+                    <option value="がんばったこと">がんばったこと</option>
+                    <option value="ひそかな特技">ひそかな特技</option>
+                    <option value="おすすめしたいもの">おすすめしたいもの</option>
+                    <option value="行ってみた場所">行ってみた場所</option>
+                    <option value="はじめてやったこと">はじめてやったこと</option>
+                    <option value="伝えたいありがとう">伝えたいありがとう</option>
+                    <option value="その他">その他</option>
                   </select>
                 </label>
-                <label class="field">
-                  <span>あなたの呼び名 <small>任意</small></span>
-                  <input id="create-author" type="text" maxlength="12" placeholder="ゆか" />
+                <label class="anonymous-choice">
+                  <input id="create-anonymous" type="checkbox" checked />
+                  <span><strong>匿名でつくる</strong><small>名前を出さない</small></span>
                 </label>
               </div>
-              <label class="field">
-                <span>表に見せるひとこと</span>
-                <input id="create-teaser" type="text" maxlength="42" required value="ちょっとうれしかったこと。" />
-                <small><span id="teaser-count">19</span> / 42</small>
+              <label class="field" id="custom-category-field" hidden>
+                <span>話の種類を入力</span>
+                <input id="create-custom-category" type="text" maxlength="18" placeholder="例：最近見つけたこと" />
+              </label>
+              <label class="field" id="author-field" hidden>
+                <span>呼び名</span>
+                <input id="create-author" type="text" maxlength="12" />
               </label>
               <label class="field">
                 <span>解いたあとに見せたいこと</span>
@@ -198,7 +223,7 @@
             </fieldset>
 
             <fieldset>
-              <legend><span>02</span> あいことばを決める</legend>
+              <legend><span>02</span> 暗号をえらぶ</legend>
               <div class="field-grid field-grid-key">
                 <label class="field">
                   <span>短いあいことば</span>
@@ -210,6 +235,28 @@
                   <strong id="create-cipher-preview">へけ</strong>
                 </div>
               </div>
+              <div class="puzzle-options" role="radiogroup" aria-label="暗号の種類">
+                <label>
+                  <input type="radio" name="puzzle" value="shift" checked />
+                  <span class="puzzle-option-top"><strong>ひとつずらし</strong><small>かんたん</small></span>
+                  <span>五十音をひとつ移動</span>
+                </label>
+                <label>
+                  <input type="radio" name="puzzle" value="reverse" />
+                  <span class="puzzle-option-top"><strong>さかさ文字</strong><small>かんたん</small></span>
+                  <span>後ろから読む</span>
+                </label>
+                <label>
+                  <input type="radio" name="puzzle" value="morse" />
+                  <span class="puzzle-option-top"><strong>モールス信号</strong><small>ふつう</small></span>
+                  <span>トン・ツーを読む</span>
+                </label>
+                <label>
+                  <input type="radio" name="puzzle" value="unicode" />
+                  <span class="puzzle-option-top"><strong>Unicode</strong><small>専門的</small></span>
+                  <span>文字コードを解く</span>
+                </label>
+              </div>
               <label class="field">
                 <span>もうひとつのヒント <small>任意</small></span>
                 <input id="create-hint" type="text" maxlength="36" value="身につけるもの" placeholder="身につけるもの" />
@@ -217,7 +264,24 @@
             </fieldset>
 
             <fieldset>
-              <legend><span>03</span> カードの色</legend>
+              <legend><span>03</span> 届け方</legend>
+              <div class="visibility-options" role="radiogroup" aria-label="カードの公開範囲">
+                <label>
+                  <input type="radio" name="visibility" value="limited" checked />
+                  <span class="visibility-icon" aria-hidden="true">⌁</span>
+                  <span><strong>限定公開</strong><small>URLを知っている人だけ</small></span>
+                </label>
+                <label>
+                  <input type="radio" name="visibility" value="public" />
+                  <span class="visibility-icon" aria-hidden="true">✦</span>
+                  <span><strong>公開</strong><small>みんなのカードに流れる</small></span>
+                </label>
+              </div>
+              <p class="prototype-note">試作版の公開カードは、この端末のフィードに流れます。</p>
+            </fieldset>
+
+            <fieldset>
+              <legend><span>04</span> カードの色</legend>
               <div class="color-options" role="radiogroup" aria-label="カードの色">
                 <label><input type="radio" name="theme" value="plum" checked /><span class="swatch swatch-plum"></span><span>すみれ</span></label>
                 <label><input type="radio" name="theme" value="green" /><span class="swatch swatch-green"></span><span>こけ</span></label>
@@ -241,14 +305,15 @@
       <section class="view complete-view" id="complete-view" aria-labelledby="complete-title" hidden>
         <div class="complete-shell">
           <p class="eyebrow"><span></span> YOUR CARD IS READY</p>
-          <h1 id="complete-title">そっと置けるカードが<br />できました。</h1>
+          <h1 id="complete-title"></h1>
           <div id="complete-card" class="mini-card"></div>
           <div class="share-actions">
             <button id="copy-link-button" class="button button-primary button-full" type="button">リンクをコピー</button>
             <button id="preview-card-button" class="button button-ghost button-full" type="button">受け手の画面をためす</button>
+            <button id="view-feed-button" class="button button-ghost button-full" type="button" hidden>みんなのカードを見る</button>
           </div>
           <p id="copy-status" class="copy-status" aria-live="polite"></p>
-          <p class="share-note">リンクを知っている人には見えるので、秘密の情報は入れないでね。</p>
+          <p id="share-note" class="share-note">リンクを知っている人には見えるので、秘密の情報は入れないでね。</p>
           <button class="text-button" type="button" data-open-create>もう一枚つくる</button>
         </div>
       </section>
@@ -259,6 +324,6 @@
       <p>解く自由も、解かない自由も。</p>
     </footer>
 
-    <script src="./app.js?v=2" defer></script>
+    <script src="./app.js?v=3" defer></script>
   </body>
 </html>
