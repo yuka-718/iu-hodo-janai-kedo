@@ -1,8 +1,8 @@
 const themeColors = {
-  plum: "#d88fb3",
-  green: "#97c9b7",
-  blue: "#a6b5e3",
-  orange: "#f2a37d",
+  plum: "#ff62c6",
+  green: "#caff38",
+  blue: "#7894ff",
+  orange: "#ff8a61",
 };
 
 const puzzleTypes = {
@@ -279,7 +279,7 @@ function openReader(card, origin = "home") {
   });
   cipherContainer.setAttribute("aria-label", `暗号：${tokens.join("、")}`);
   showView(readerView);
-  setTimeout(() => document.querySelector("#answer-input")?.focus(), 120);
+  setTimeout(() => document.querySelector("#answer-input")?.focus({ preventScroll: true }), 120);
 }
 
 function revealCard() {
