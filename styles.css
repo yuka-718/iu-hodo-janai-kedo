@@ -1007,6 +1007,88 @@ select:focus {
   50% { translate: 0 -4px; }
 }
 
+.room-view {
+  padding: 64px 0 120px;
+}
+
+.room-shell {
+  position: relative;
+  max-width: 1040px;
+}
+
+.room-heading {
+  padding: 0 0 42px;
+  border-bottom: 1px solid var(--line);
+}
+
+.room-heading .back-button {
+  margin-bottom: 54px;
+}
+
+.room-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.room-title-row h1 {
+  margin-bottom: 9px;
+  font-family: var(--serif);
+  font-size: clamp(38px, 5vw, 58px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+.room-title-row p,
+.room-footnote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.room-lock {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(216, 143, 179, 0.32);
+  border-radius: 50%;
+  color: var(--plum-dark);
+  background: #fcebf3;
+  font-size: 25px;
+}
+
+.room-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.room-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  padding: 42px 0 28px;
+}
+
+.room-card {
+  min-height: 245px;
+}
+
+.room-card:nth-child(3n + 2) {
+  transform: translateY(16px) rotate(1deg);
+}
+
+.room-card:nth-child(3n) {
+  transform: rotate(-1deg);
+}
+
+.room-footnote {
+  text-align: center;
+}
+
 .creator-shell {
   display: grid;
   grid-template-columns: minmax(300px, 0.75fr) minmax(460px, 1.25fr);
@@ -1266,6 +1348,11 @@ select:focus {
   font-size: 9px;
 }
 
+#visibility-fieldset.is-room-mode .visibility-options label:has(input[value="public"]) {
+  opacity: 0.38;
+  cursor: default;
+}
+
 .color-options {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1471,6 +1558,10 @@ select:focus {
     gap: 55px;
   }
 
+  .room-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .feed-heading {
     position: static;
   }
@@ -1632,6 +1723,37 @@ select:focus {
 
   .feed-view {
     padding: 50px 0 90px;
+  }
+
+  .room-view {
+    padding: 42px 0 88px;
+  }
+
+  .room-heading .back-button {
+    margin-bottom: 42px;
+  }
+
+  .room-title-row h1 {
+    font-size: 34px;
+  }
+
+  .room-lock {
+    width: 50px;
+    height: 50px;
+  }
+
+  .room-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .room-cards {
+    grid-template-columns: 1fr;
+    padding-top: 32px;
+  }
+
+  .room-card:nth-child(n) {
+    transform: none;
   }
 
   .public-feed {

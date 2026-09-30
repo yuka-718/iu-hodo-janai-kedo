@@ -9,8 +9,8 @@
     />
     <meta name="theme-color" content="#fff8f5" />
     <title>言うほどじゃないけど。</title>
-    <link rel="icon" href="./favicon.svg?v=3" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=3" />
+    <link rel="icon" href="./favicon.svg?v=4" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=4" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
@@ -48,8 +48,8 @@
               ちょっと知ってほしいことを、解ける秘密に。
             </p>
             <div class="hero-actions">
-              <button class="button button-primary" type="button" data-open-sample>
-                <span>サンプルを解いてみる</span>
+              <button class="button button-primary" type="button" data-open-sample-room>
+                <span>サンプルの部屋を見る</span>
                 <span aria-hidden="true">→</span>
               </button>
               <button class="text-button" type="button" data-open-create>
@@ -94,6 +94,29 @@
             <button class="button button-primary" type="button" data-open-create>自分も流してみる <span aria-hidden="true">＋</span></button>
           </div>
           <div id="public-feed" class="public-feed" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="view room-view" id="room-view" aria-labelledby="room-title" hidden>
+        <div class="room-shell wrap">
+          <div class="room-heading">
+            <button class="back-button" type="button" data-go-home><span aria-hidden="true">←</span> もどる</button>
+            <p class="eyebrow"><span></span> PRIVATE ROOM</p>
+            <div class="room-title-row">
+              <div>
+                <h1 id="room-title">なかまの部屋。</h1>
+                <p><span id="room-count">0</span>枚のカード</p>
+              </div>
+              <span class="room-lock" aria-label="限定公開">⌁</span>
+            </div>
+            <div class="room-actions">
+              <button id="copy-room-link-button" class="button button-ghost" type="button">部屋のURLをコピー</button>
+              <button id="add-room-card-button" class="button button-primary" type="button">この部屋に置く <span aria-hidden="true">＋</span></button>
+            </div>
+            <p id="room-copy-status" class="copy-status" aria-live="polite"></p>
+          </div>
+          <div id="room-cards" class="room-cards" aria-live="polite"></div>
+          <p class="room-footnote">URLを知っている仲間だけ。</p>
         </div>
       </section>
 
@@ -167,7 +190,7 @@
       <section class="view create-view" id="create-view" aria-labelledby="create-title" hidden>
         <div class="creator-shell wrap">
           <div class="creator-heading">
-            <button class="back-button" type="button" data-go-home><span aria-hidden="true">←</span> もどる</button>
+            <button class="back-button" type="button" data-creator-back><span aria-hidden="true">←</span> もどる</button>
             <p class="eyebrow"><span></span> MAKE YOUR CARD</p>
             <h1 id="create-title">言うほどじゃないことを、<br />ひとつだけ。</h1>
             <p>見られても困らないことだけ、入れてね。</p>
@@ -263,13 +286,13 @@
               </label>
             </fieldset>
 
-            <fieldset>
+            <fieldset id="visibility-fieldset">
               <legend><span>03</span> 届け方</legend>
               <div class="visibility-options" role="radiogroup" aria-label="カードの公開範囲">
                 <label>
                   <input type="radio" name="visibility" value="limited" checked />
                   <span class="visibility-icon" aria-hidden="true">⌁</span>
-                  <span><strong>限定公開</strong><small>URLを知っている人だけ</small></span>
+                  <span><strong>限定公開</strong><small>仲間の部屋に置く</small></span>
                 </label>
                 <label>
                   <input type="radio" name="visibility" value="public" />
@@ -277,7 +300,7 @@
                   <span><strong>公開</strong><small>みんなのカードに流れる</small></span>
                 </label>
               </div>
-              <p class="prototype-note">試作版の公開カードは、この端末のフィードに流れます。</p>
+              <p id="visibility-note" class="prototype-note">限定公開は部屋へ、公開はみんなのフィードへ。</p>
             </fieldset>
 
             <fieldset>
@@ -324,6 +347,6 @@
       <p>解く自由も、解かない自由も。</p>
     </footer>
 
-    <script src="./app.js?v=3" defer></script>
+    <script src="./app.js?v=4" defer></script>
   </body>
 </html>
