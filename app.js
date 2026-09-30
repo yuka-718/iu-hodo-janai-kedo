@@ -2,7 +2,7 @@ const sampleCard = {
   version: 1,
   author: "ゆか",
   category: "つくったもの",
-  teaser: "最近、ちょっとうれしかったこと。",
+  teaser: "ちょっとうれしかったこと。",
   message: "この服、じつは自分でつくった。",
   key: "ふく",
   hint: "身につけるもの",
@@ -11,10 +11,10 @@ const sampleCard = {
 };
 
 const themeColors = {
-  plum: "#796278",
-  green: "#7d8972",
-  blue: "#657a8e",
-  orange: "#bf7753",
+  plum: "#d88fb3",
+  green: "#97c9b7",
+  blue: "#a6b5e3",
+  orange: "#f2a37d",
 };
 
 const kana = [
@@ -163,9 +163,6 @@ function revealCard() {
   }
 
   document.querySelector("#reveal-message").textContent = activeCard.message;
-  document.querySelector("#reveal-note").textContent = activeCard.author
-    ? `${activeCard.author}の、言うほどじゃないけど知ってほしかったこと。`
-    : "言うほどじゃないけど、知ってほしかったこと。";
   document.querySelector("#starter-text").textContent = conversationStarter(activeCard.category);
   revealPanel.scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -193,7 +190,7 @@ function hintMessage(level) {
     return `「${[...cipher][0]}」は「${[...key][0]}」。全部で${[...key].length}文字です。`;
   }
 
-  return `答えは「${key}」。もう頑張らなくて大丈夫です。`;
+  return `答えは「${key}」。そのままひらけます。`;
 }
 
 function encodeCard(card) {
@@ -282,11 +279,11 @@ document.querySelector("#answer-form").addEventListener("submit", (event) => {
   const feedback = document.querySelector("#answer-feedback");
 
   if (answer === normalizeAnswer(activeCard.key)) {
-    feedback.textContent = "ほどけました。カードをひらきます。";
+    feedback.textContent = "ほどけた！";
     feedback.classList.add("is-right");
     setTimeout(revealCard, 430);
   } else {
-    feedback.textContent = "もう少し。わからなければ、ヒントを使って大丈夫です。";
+    feedback.textContent = "おしい！ ヒントも使えるよ。";
     feedback.classList.remove("is-right");
   }
 });
