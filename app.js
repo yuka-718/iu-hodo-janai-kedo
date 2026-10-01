@@ -38,6 +38,7 @@ const publicSamples = [
 const sampleRoom = {
   version: 1,
   id: "sample-room",
+  isSample: true,
   cards: [
     sampleCard,
     { ...publicSamples[1], visibility: "limited" },
@@ -81,8 +82,12 @@ const voicedKana = {
 };
 const halfVoicedKana = { ぱ: "は", ぴ: "ひ", ぷ: "ふ", ぺ: "へ", ぽ: "ほ" };
 const smallKana = { ぁ: "あ", ぃ: "い", ぅ: "う", ぇ: "え", ぉ: "お", ゃ: "や", ゅ: "ゆ", ょ: "よ", っ: "つ" };
-const PUBLIC_STORAGE_KEY = "iu-hodo-public-cards-v1";
 const ROOM_CARD_LIMIT = 8;
+const CLIENT_TOKEN_KEY = "iu-hodo-client-token-v1";
+const backendConfig = window.IU_HODO_CONFIG || {};
+const SUPABASE_URL = String(backendConfig.supabaseUrl || "").replace(/\/$/, "");
+const SUPABASE_KEY = String(backendConfig.supabaseKey || "");
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const views = [...document.querySelectorAll(".view")];
 const homeView = document.querySelector("#home-view");
@@ -163,11 +168,12 @@ function normalizeCard(card) {
   const category = String(card.category || "小さな自己紹介").slice(0, 24);
   return {
     version: 2,
+    id: card.id && UUID_PATTERN.test(String(card.id)) ? String(card.id) : "",
     author: String(card.author || "").slice(0, 12),
     category,
     teaser: String(card.teaser || teaserForCategory(category)).slice(0, 42),
     message: String(card.message || "").slice(0, 100),
-    key: String(card.key || "").slice(0, 12),
+    key: String(card.key || card.answer || "").slice(0, 12),
     hint: String(card.hint || "").slice(0, 36),
     puzzle: puzzleTypes[card.puzzle] ? card.puzzle : "shift",
     visibility: card.visibility === "public" ? "public" : "limited",
@@ -183,8 +189,80 @@ function normalizeRoom(room) {
   return {
     version: 1,
     id: String(room?.id || crypto.randomUUID?.() || Date.now()).slice(0, 48),
+    isSample: Boolean(room?.isSample),
     cards: cards.map((card) => ({ ...card, visibility: "limited" })),
   };
+}
+
+function getClientToken() {
+  try {
+    let token = localStorage.getItem(CLIENT_TOKEN_KEY);
+    if (!token || token.length < 20) {
+      token = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
+      localStorage.setItem(CLIENT_TOKEN_KEY, token);
+    }
+    return token;
+  } catch {
+    return `${crypto.randomUUID()}-${crypto.randomUUID()}`;
+  }
+}
+
+async function callBackend(functionName, body = {}) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error("公開サービスへ接続できません。");
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    const message = String(detail.message || "");
+    if (message.includes("rate limit")) throw new Error("短時間の投稿が多いため、少し待ってから試してください。");
+    if (message.includes("room is full")) throw new Error("この部屋には8枚まで置けます。");
+    throw new Error("公開サービスへ保存できませんでした。少し待ってから試してください。");
+  }
+  return response.status === 204 ? [] : response.json();
+}
+
+async function loadPublicCards() {
+  const rows = await callBackend("get_public_cards");
+  return rows.map(normalizeCard).filter((card) => card.id && card.message && card.key);
+}
+
+async function loadRoomCards(roomToken) {
+  if (!UUID_PATTERN.test(roomToken)) throw new Error("Invalid room");
+  const rows = await callBackend("get_room_cards", { p_room_token: roomToken });
+  if (!rows.length) throw new Error("Room not found");
+  return normalizeRoom({ id: roomToken, cards: rows });
+}
+
+async function loadPublicCard(cardId) {
+  if (!UUID_PATTERN.test(cardId)) throw new Error("Invalid card");
+  const rows = await callBackend("get_card", { p_card_id: cardId });
+  if (!rows.length) throw new Error("Card not found");
+  return normalizeCard(rows[0]);
+}
+
+async function saveCard(card, roomToken = null) {
+  const rows = await callBackend("create_card", {
+    p_visibility: card.visibility,
+    p_room_token: roomToken,
+    p_author: card.author,
+    p_category: card.category,
+    p_teaser: card.teaser,
+    p_message: card.message,
+    p_answer: card.key,
+    p_hint: card.hint,
+    p_puzzle: card.puzzle,
+    p_theme: card.theme,
+    p_client_token: getClientToken(),
+  });
+  if (!rows.length) throw new Error("カードを保存できませんでした。");
+  return rows[0];
 }
 
 function showView(view) {
@@ -213,6 +291,7 @@ function openHome({ clearHash = true } = {}) {
 function openCreator(room = null) {
   creatorRoom = room?.cards ? normalizeRoom(room) : null;
   if (!creatorRoom) clearSharedHash();
+  resetCreatorForm();
   const publicOption = document.querySelector('input[name="visibility"][value="public"]');
   const limitedOption = document.querySelector('input[name="visibility"][value="limited"]');
   const visibilityFieldset = document.querySelector("#visibility-fieldset");
@@ -221,7 +300,7 @@ function openCreator(room = null) {
   visibilityFieldset.classList.toggle("is-room-mode", Boolean(creatorRoom));
   document.querySelector("#visibility-note").textContent = creatorRoom
     ? "この部屋に、限定公開で置きます。"
-    : "限定公開は部屋へ、公開はみんなのフィードへ。";
+    : "限定公開は共有URLへ、公開はみんなのフィードへ。";
   document.querySelector("#create-title").innerHTML = creatorRoom
     ? "この部屋に、<br />ひとつだけ。"
     : "言うほどじゃないことを、<br />ひとつだけ。";
@@ -229,21 +308,45 @@ function openCreator(room = null) {
   setTimeout(() => document.querySelector("#create-category")?.focus(), 0);
 }
 
-function openFeed() {
+async function openFeed() {
   clearSharedHash();
-  renderPublicFeed();
   showView(feedView);
+  const feed = document.querySelector("#public-feed");
+  const status = document.querySelector("#feed-status");
+  feed.replaceChildren();
+  status.textContent = "公開カードを読み込んでいます…";
+  try {
+    const cards = await loadPublicCards();
+    renderPublicFeed(cards);
+    status.textContent = cards.length
+      ? "いま公開されているカードとサンプルです。"
+      : "まだ公開カードはありません。サンプルを表示しています。";
+  } catch {
+    renderPublicFeed([]);
+    status.textContent = "公開カードを読み込めませんでした。サンプルを表示しています。";
+  }
 }
 
 function roomLink(room) {
-  return `${location.origin}${location.pathname}#room=${encodeRoom(room)}`;
+  return `${location.origin}${location.pathname}#room=${encodeURIComponent(room.id)}`;
 }
 
-function openRoom(room, { updateHash = true } = {}) {
-  activeRoom = normalizeRoom(room);
-  renderRoom(activeRoom);
-  if (updateHash) history.replaceState(null, "", `#room=${encodeRoom(activeRoom)}`);
+async function openRoom(roomOrToken, { updateHash = true } = {}) {
   showView(roomView);
+  document.querySelector("#room-cards").replaceChildren();
+  document.querySelector("#room-count").textContent = "…";
+  try {
+    if (typeof roomOrToken === "string") {
+      activeRoom = roomOrToken === "sample-room" ? normalizeRoom(sampleRoom) : await loadRoomCards(roomOrToken);
+    } else {
+      activeRoom = normalizeRoom(roomOrToken);
+    }
+    renderRoom(activeRoom);
+    if (updateHash) history.replaceState(null, "", `#room=${encodeURIComponent(activeRoom.id)}`);
+  } catch {
+    openHome({ clearHash: true });
+    window.alert("この部屋を開けませんでした。URLを確認してください。");
+  }
 }
 
 function openReader(card, origin = "home") {
@@ -310,22 +413,11 @@ function hintMessage(level) {
   return `答えは「${key}」。そのままひらけます。`;
 }
 
-function encodePayload(payload) {
-  const bytes = new TextEncoder().encode(JSON.stringify(payload));
-  let binary = "";
-  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
 function decodePayload(encoded) {
   const padded = encoded.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((encoded.length + 3) % 4);
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
   return JSON.parse(new TextDecoder().decode(bytes));
-}
-
-function encodeCard(card) {
-  return encodePayload(normalizeCard(card));
 }
 
 function decodeCard(encoded) {
@@ -334,36 +426,13 @@ function decodeCard(encoded) {
   return card;
 }
 
-function encodeRoom(room) {
-  return encodePayload(normalizeRoom(room));
-}
-
 function decodeRoom(encoded) {
   const room = normalizeRoom(decodePayload(encoded));
   if (!room.cards.length) throw new Error("Invalid room");
   return room;
 }
 
-function loadStoredPublicCards() {
-  try {
-    const cards = JSON.parse(localStorage.getItem(PUBLIC_STORAGE_KEY) || "[]");
-    return Array.isArray(cards) ? cards.map(normalizeCard).filter((card) => card.message && card.key) : [];
-  } catch {
-    return [];
-  }
-}
-
-function storePublicCard(card) {
-  const cards = loadStoredPublicCards();
-  const compactCard = { ...card, image: card.image?.length > 70000 ? "" : card.image };
-  try {
-    localStorage.setItem(PUBLIC_STORAGE_KEY, JSON.stringify([compactCard, ...cards].slice(0, 12)));
-  } catch {
-    localStorage.setItem(PUBLIC_STORAGE_KEY, JSON.stringify([{ ...compactCard, image: "" }, ...cards.slice(0, 5)]));
-  }
-}
-
-function createCardButton(card, origin, index = 0, extraClass = "") {
+function createCardButton(card, origin, index = 0, extraClass = "", isSample = false) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = `feed-card ${extraClass}`.trim();
@@ -376,7 +445,7 @@ function createCardButton(card, origin, index = 0, extraClass = "") {
   category.textContent = card.category;
   const author = document.createElement("span");
   author.className = "quiet-label";
-  author.textContent = `from ${card.author || "匿名"}`;
+  author.textContent = isSample ? `サンプル · from ${card.author || "匿名"}` : `from ${card.author || "匿名"}`;
   top.append(category, author);
   const title = document.createElement("strong");
   title.textContent = card.teaser;
@@ -391,10 +460,11 @@ function createCardButton(card, origin, index = 0, extraClass = "") {
   return button;
 }
 
-function renderPublicFeed() {
+function renderPublicFeed(cards) {
   const feed = document.querySelector("#public-feed");
-  const cards = [...loadStoredPublicCards(), ...publicSamples];
-  feed.replaceChildren(...cards.map((card, index) => createCardButton(card, "feed", index)));
+  const publicButtons = cards.map((card, index) => createCardButton(card, "feed", index));
+  const sampleButtons = publicSamples.map((card, index) => createCardButton(card, "feed", cards.length + index, "", true));
+  feed.replaceChildren(...publicButtons, ...sampleButtons);
 }
 
 function renderRoom(room) {
@@ -402,22 +472,6 @@ function renderRoom(room) {
   document.querySelector("#room-count").textContent = room.cards.length;
   cards.replaceChildren(...room.cards.map((card, index) => createCardButton(card, "room", index, "room-card")));
   document.querySelector("#add-room-card-button").disabled = room.cards.length >= ROOM_CARD_LIMIT;
-}
-
-async function compressImage(file) {
-  if (!file) return "";
-  if (!file.type.startsWith("image/")) throw new Error("画像ファイルを選んでください。");
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 560 / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  let dataUrl = canvas.toDataURL("image/webp", 0.7);
-  if (dataUrl.length > 90000) dataUrl = canvas.toDataURL("image/jpeg", 0.48);
-  if (dataUrl.length > 125000) throw new Error("写真が大きすぎます。別の写真を選んでください。");
-  return dataUrl;
 }
 
 function renderCompleteCard(card) {
@@ -440,8 +494,8 @@ function renderCompleteCard(card) {
   document.querySelector("#preview-card-button").textContent = isPublic ? "受け手の画面をためす" : "部屋を見る";
   document.querySelector("#view-feed-button").hidden = !isPublic;
   document.querySelector("#share-note").textContent = isPublic
-    ? "公開フィードとURLの両方から見られます。"
-    : "このURLを知っている仲間だけが、部屋に入れます。";
+    ? "公開フィードと共有URLの両方から、ほかの端末でも見られます。"
+    : "この共有URLを知っている人は、部屋を開くことができます。";
 }
 
 function selectedPuzzle() {
@@ -449,7 +503,14 @@ function selectedPuzzle() {
 }
 
 function updateCipherPreview() {
-  document.querySelector("#create-cipher-preview").textContent = encodeKey(document.querySelector("#create-key").value, selectedPuzzle()) || "—";
+  const normalizedKey = normalizeAnswer(document.querySelector("#create-key").value);
+  document.querySelector("#create-cipher-preview").textContent = normalizedKey && !isSupportedKey(normalizedKey)
+    ? "使えない文字があります"
+    : encodeKey(normalizedKey, selectedPuzzle()) || "—";
+}
+
+function isSupportedKey(value) {
+  return [...value].every((character) => kana.includes(character) || /^[a-z0-9]$/.test(character));
 }
 
 function syncCategoryField() {
@@ -462,8 +523,22 @@ function syncCategoryField() {
 
 function syncAnonymousField() {
   const anonymous = document.querySelector("#create-anonymous").checked;
+  const authorInput = document.querySelector("#create-author");
   document.querySelector("#author-field").hidden = anonymous;
-  if (anonymous) document.querySelector("#create-author").value = "";
+  authorInput.required = !anonymous;
+  if (anonymous) authorInput.value = "";
+}
+
+function resetCreatorForm() {
+  const form = document.querySelector("#create-form");
+  form.reset();
+  document.querySelector("#create-agreement").checked = false;
+  document.querySelector("#create-key").setCustomValidity("");
+  document.querySelector("#create-author").setCustomValidity("");
+  updateCount(document.querySelector("#create-message"), "#message-count");
+  syncCategoryField();
+  syncAnonymousField();
+  updateCipherPreview();
 }
 
 document.querySelectorAll("[data-go-home]").forEach((button) => button.addEventListener("click", () => openHome()));
@@ -477,12 +552,17 @@ document.querySelector("[data-creator-back]").addEventListener("click", () => (c
 document.querySelectorAll("[data-open-feed]").forEach((button) => button.addEventListener("click", openFeed));
 document.querySelectorAll("[data-open-sample]").forEach((button) => button.addEventListener("click", () => openReader(sampleCard)));
 document.querySelectorAll("[data-open-sample-room]").forEach((button) => button.addEventListener("click", () => openRoom(sampleRoom)));
-document.querySelector("#add-room-card-button").addEventListener("click", () => openCreator(activeRoom));
+document.querySelector("#add-room-card-button").addEventListener("click", () => openCreator(activeRoom?.isSample ? null : activeRoom));
 
 document.querySelector("#answer-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const answer = normalizeAnswer(document.querySelector("#answer-input").value);
   const feedback = document.querySelector("#answer-feedback");
+  if (!answer) {
+    feedback.textContent = "答えを入力してね。";
+    feedback.classList.remove("is-right");
+    return;
+  }
   if (answer === normalizeAnswer(activeCard.key)) {
     feedback.textContent = "ほどけた！";
     feedback.classList.add("is-right");
@@ -510,18 +590,19 @@ document.querySelector("#hint-button").addEventListener("click", () => {
 
 const messageInput = document.querySelector("#create-message");
 const keyInput = document.querySelector("#create-key");
-const imageInput = document.querySelector("#create-image");
 
 function updateCount(input, output) {
   document.querySelector(output).textContent = [...input.value].length;
 }
 
 messageInput.addEventListener("input", () => updateCount(messageInput, "#message-count"));
-keyInput.addEventListener("input", updateCipherPreview);
+keyInput.addEventListener("input", () => {
+  keyInput.setCustomValidity("");
+  updateCipherPreview();
+});
 document.querySelectorAll('input[name="puzzle"]').forEach((input) => input.addEventListener("change", updateCipherPreview));
 document.querySelector("#create-category").addEventListener("change", syncCategoryField);
 document.querySelector("#create-anonymous").addEventListener("change", syncAnonymousField);
-imageInput.addEventListener("change", () => { document.querySelector("#file-label").textContent = imageInput.files[0]?.name || "写真をえらぶ"; });
 
 document.querySelector("#create-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -531,15 +612,19 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
   submitButton.textContent = "カードをつくっています…";
   try {
     const normalizedKey = normalizeAnswer(keyInput.value);
-    if ([...normalizedKey].length < 2) {
-      keyInput.setCustomValidity("あいことばは2文字以上にしてください。");
+    if ([...normalizedKey].length < 2 || [...normalizedKey].length > 8) {
+      keyInput.setCustomValidity("あいことばは2〜8文字にしてください。");
+      keyInput.reportValidity();
+      return;
+    }
+    if (!isSupportedKey(normalizedKey)) {
+      keyInput.setCustomValidity("ひらがな・カタカナ・英数字だけを使ってください。");
       keyInput.reportValidity();
       return;
     }
     keyInput.setCustomValidity("");
     const categorySelect = document.querySelector("#create-category");
     const category = categorySelect.value === "その他" ? document.querySelector("#create-custom-category").value.trim() : categorySelect.value;
-    const image = await compressImage(imageInput.files[0]);
     const visibility = creatorRoom ? "limited" : document.querySelector('input[name="visibility"]:checked').value;
     createdCard = normalizeCard({
       version: 2,
@@ -552,17 +637,15 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
       puzzle: selectedPuzzle(),
       visibility,
       theme: document.querySelector('input[name="theme"]:checked').value,
-      image,
+      image: "",
     });
+    const saved = await saveCard(createdCard, createdCard.visibility === "limited" ? creatorRoom?.id || null : null);
+    createdCard = normalizeCard({ ...createdCard, id: saved.id });
     if (createdCard.visibility === "public") {
-      storePublicCard(createdCard);
       createdRoom = null;
-      createdLink = `${location.origin}${location.pathname}#card=${encodeCard(createdCard)}`;
+      createdLink = `${location.origin}${location.pathname}#card=${encodeURIComponent(createdCard.id)}`;
     } else {
-      createdRoom = normalizeRoom({
-        id: creatorRoom?.id,
-        cards: [...(creatorRoom?.cards || []), createdCard],
-      });
+      createdRoom = await loadRoomCards(saved.room_token);
       createdLink = roomLink(createdRoom);
     }
     renderCompleteCard(createdCard);
@@ -594,7 +677,7 @@ document.querySelector("#preview-card-button").addEventListener("click", () => {
     openRoom(createdRoom);
     return;
   }
-  history.replaceState(null, "", `#card=${encodeCard(createdCard)}`);
+  history.replaceState(null, "", `#card=${encodeURIComponent(createdCard.id)}`);
   openReader(createdCard);
 });
 document.querySelector("#view-feed-button").addEventListener("click", openFeed);
@@ -603,34 +686,39 @@ document.querySelector("#copy-room-link-button").addEventListener("click", () =>
   copyLink(roomLink(activeRoom), document.querySelector("#room-copy-status"));
 });
 
-function openSharedHash() {
+async function openSharedHash() {
   if (location.hash.startsWith("#room=")) {
-    openRoom(decodeRoom(location.hash.slice(6)), { updateHash: false });
+    const roomValue = decodeURIComponent(location.hash.slice(6));
+    if (roomValue === "sample-room" || UUID_PATTERN.test(roomValue)) {
+      await openRoom(roomValue, { updateHash: false });
+    } else {
+      await openRoom(decodeRoom(roomValue), { updateHash: false });
+    }
     return true;
   }
   if (location.hash.startsWith("#card=")) {
-    openReader(decodeCard(location.hash.slice(6)));
+    const cardValue = decodeURIComponent(location.hash.slice(6));
+    openReader(UUID_PATTERN.test(cardValue) ? await loadPublicCard(cardValue) : decodeCard(cardValue));
     return true;
   }
   return false;
 }
 
-window.addEventListener("hashchange", () => {
+window.addEventListener("hashchange", async () => {
   try {
-    if (!openSharedHash()) openHome({ clearHash: false });
+    if (!(await openSharedHash())) openHome({ clearHash: false });
   } catch {
     openHome({ clearHash: true });
   }
 });
 
-function initialize() {
+async function initialize() {
   updateCount(messageInput, "#message-count");
   updateCipherPreview();
   syncCategoryField();
   syncAnonymousField();
-  renderPublicFeed();
   try {
-    if (openSharedHash()) return;
+    if (await openSharedHash()) return;
   } catch {
     history.replaceState(null, "", location.pathname + location.search);
   }

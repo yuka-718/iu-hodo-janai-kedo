@@ -7,11 +7,22 @@
       name="description"
       content="言うほどじゃないけど。ちょっと知ってほしいことを、解ける秘密にするコミュニケーション・プロトタイプ。"
     />
+    <link rel="canonical" href="https://yuka-718.github.io/iu-hodo-janai-kedo/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="言うほどじゃないけど。" />
+    <meta property="og:description" content="ちょっと知ってほしいことを、解ける秘密に。" />
+    <meta property="og:url" content="https://yuka-718.github.io/iu-hodo-janai-kedo/" />
+    <meta property="og:image" content="https://yuka-718.github.io/iu-hodo-janai-kedo/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="言うほどじゃないけど。" />
+    <meta name="twitter:description" content="ちょっと知ってほしいことを、解ける秘密に。" />
+    <meta name="twitter:image" content="https://yuka-718.github.io/iu-hodo-janai-kedo/og-image.png" />
     <meta name="theme-color" content="#fff8fb" />
     <title>言うほどじゃないけど。</title>
-    <link rel="icon" href="./favicon.svg?v=6" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=6" />
-    <link rel="stylesheet" href="./cute.css?v=7" />
+    <link rel="icon" href="./favicon.svg?v=9" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=9" />
+    <link rel="stylesheet" href="./cute.css?v=9" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
@@ -113,6 +124,7 @@
             <button class="back-button" type="button" data-go-home><span aria-hidden="true">←</span> もどる</button>
             <p class="eyebrow"><span></span> PUBLIC CARDS</p>
             <h1 id="feed-title">みんなの<br />言うほどじゃないこと。</h1>
+            <p id="feed-status" class="feed-local-note">公開されたカードとサンプルを表示しています。</p>
             <button class="button button-primary" type="button" data-open-create>自分も流してみる <span aria-hidden="true">＋</span></button>
           </div>
           <div id="public-feed" class="public-feed" aria-live="polite"></div>
@@ -140,7 +152,7 @@
             <p id="room-copy-status" class="copy-status" aria-live="polite"></p>
           </div>
           <div id="room-cards" class="room-cards" aria-live="polite"></div>
-          <p class="room-footnote">URLを知っている仲間だけ。</p>
+          <p class="room-footnote">URLを知っている人が見られます。本当の秘密は入れないでね。</p>
         </div>
       </section>
 
@@ -247,21 +259,13 @@
                 <input id="create-custom-category" type="text" maxlength="18" placeholder="例：最近見つけたこと" />
               </label>
               <label class="field" id="author-field" hidden>
-                <span>呼び名</span>
+                <span>呼び名 <small>必須</small></span>
                 <input id="create-author" type="text" maxlength="12" />
               </label>
               <label class="field">
                 <span>解いたあとに見せたいこと</span>
                 <textarea id="create-message" maxlength="100" rows="3" required placeholder="ここに入力"></textarea>
                 <small><span id="message-count">0</span> / 100</small>
-              </label>
-              <label class="field">
-                <span>写真 <small>任意・共有リンクに含まれます</small></span>
-                <span class="file-input">
-                  <input id="create-image" type="file" accept="image/jpeg,image/png,image/webp" />
-                  <span id="file-label">写真をえらぶ</span>
-                  <span aria-hidden="true">＋</span>
-                </span>
               </label>
             </fieldset>
 
@@ -271,7 +275,7 @@
                 <label class="field">
                   <span>短いあいことば</span>
                   <input id="create-key" type="text" maxlength="8" required />
-                  <small>ひらがな・英数字、2〜8文字がおすすめ</small>
+                  <small>ひらがな・カタカナ・英数字で、2〜8文字</small>
                 </label>
                 <div class="cipher-preview" aria-live="polite">
                   <span>暗号になると</span>
@@ -302,7 +306,7 @@
               </div>
               <label class="field">
                 <span>もうひとつのヒント <small>任意</small></span>
-                <input id="create-hint" type="text" maxlength="36" value="身につけるもの" placeholder="身につけるもの" />
+                <input id="create-hint" type="text" maxlength="36" placeholder="必要なときだけ入力" />
               </label>
             </fieldset>
 
@@ -324,7 +328,7 @@
                   <span><strong>公開</strong><small>みんなのカードに流れる</small></span>
                 </label>
               </div>
-              <p id="visibility-note" class="prototype-note">限定公開は部屋へ、公開はみんなのフィードへ。</p>
+              <p id="visibility-note" class="prototype-note">限定公開は共有URLへ、公開はみんなのフィードへ。</p>
             </fieldset>
 
             <fieldset>
@@ -337,9 +341,14 @@
               </div>
             </fieldset>
 
+            <aside class="safety-notice" role="note" aria-label="大切なお知らせ">
+              <strong>これは遊びとしての暗号です。</strong>
+              <span>URLを知っている人は内容を読み出せます。個人情報や本当の秘密は入れないでください。</span>
+            </aside>
+
             <label class="agreement">
               <input id="create-agreement" type="checkbox" required />
-              <span>見られても困らない内容です</span>
+              <span>見られても困らない内容であることを確認しました</span>
             </label>
 
             <button class="button button-primary button-large button-full" type="submit">
@@ -360,7 +369,11 @@
             <button id="view-feed-button" class="button button-ghost button-full" type="button" hidden>みんなのカードを見る</button>
           </div>
           <p id="copy-status" class="copy-status" aria-live="polite"></p>
-          <p id="share-note" class="share-note">リンクを知っている人には見えるので、秘密の情報は入れないでね。</p>
+          <p id="share-note" class="share-note"></p>
+          <aside class="safety-notice safety-notice-complete" role="note">
+            <strong>これは遊びとしての暗号です。</strong>
+            <span>URLを知っている人は内容を読み出せます。個人情報や本当の秘密は共有しないでください。</span>
+          </aside>
           <button class="text-button" type="button" data-open-create>もう一枚つくる</button>
         </div>
       </section>
@@ -371,6 +384,7 @@
       <p>解く自由も、解かない自由も。</p>
     </footer>
 
-    <script src="./app.js?v=8" defer></script>
+    <script src="./config.js?v=1" defer></script>
+    <script src="./app.js?v=10" defer></script>
   </body>
 </html>

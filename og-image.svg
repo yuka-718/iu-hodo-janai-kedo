@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">言うほどじゃないけど。</title>
+  <desc id="desc">ちょっと知ってほしいことを、解ける秘密に。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7fb"/>
+      <stop offset="0.42" stop-color="#f6d9e8"/>
+      <stop offset="0.72" stop-color="#ddd6fa"/>
+      <stop offset="1" stop-color="#d8efe8"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#7f5970" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" rx="44" fill="url(#background)"/>
+  <g opacity="0.5" fill="#fff">
+    <circle cx="90" cy="90" r="4"/><circle cx="130" cy="90" r="4"/><circle cx="170" cy="90" r="4"/>
+    <circle cx="90" cy="130" r="4"/><circle cx="130" cy="130" r="4"/><circle cx="170" cy="130" r="4"/>
+  </g>
+  <g transform="translate(88 92)" filter="url(#shadow)">
+    <rect width="1024" height="446" rx="42" fill="#fff" fill-opacity="0.84"/>
+  </g>
+  <g transform="translate(130 126)">
+    <ellipse cx="50" cy="22" rx="18" ry="28" fill="#f5a7c7"/>
+    <ellipse cx="78" cy="50" rx="28" ry="18" fill="#c6b8f2"/>
+    <ellipse cx="50" cy="78" rx="18" ry="28" fill="#b8e4d3"/>
+    <ellipse cx="22" cy="50" rx="28" ry="18" fill="#ffd5a1"/>
+    <circle cx="50" cy="50" r="17" fill="#fff1a7"/>
+  </g>
+  <text x="130" y="315" fill="#4b3544" font-family="'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif" font-size="74" font-weight="800" letter-spacing="-4">言うほどじゃないけど。</text>
+  <text x="134" y="390" fill="#8f73c8" font-family="'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif" font-size="38" font-weight="700">ちょっと知ってほしいことを、解ける秘密に。</text>
+  <g transform="translate(930 145)">
+    <path d="M52 92S4 65 4 30c0-23 29-33 48-12 19-21 48-11 48 12 0 35-48 62-48 62Z" fill="#f28bb5"/>
+    <path d="m135 6 12 31 31 13-31 13-12 31-12-31-31-13 31-13 12-31Z" fill="#fff1a7"/>
+  </g>
+  <text x="134" y="482" fill="#856a7a" font-family="'Hiragino Maru Gothic ProN','Yu Gothic',sans-serif" font-size="21" font-weight="700">COMMUNICATION PROTOTYPE</text>
+</svg>

@@ -680,6 +680,36 @@ body {
   color: var(--ink);
 }
 
+.feed-local-note {
+  max-width: 360px;
+  margin: 12px 0 24px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.safety-notice {
+  display: grid;
+  gap: 5px;
+  padding: 18px 20px;
+  border: 1px solid rgba(170, 102, 137, 0.14);
+  border-radius: 18px;
+  color: #724f63;
+  background: linear-gradient(145deg, #fff1f6, #f0eafb);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.safety-notice strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.safety-notice-complete {
+  margin: 18px 0;
+  text-align: left;
+}
+
 .site-footer {
   border-top: 1px solid rgba(103, 67, 89, 0.1);
   color: #7d5e71;
@@ -701,6 +731,16 @@ body {
   .wordmark { font-size: 10px; }
   .wordmark-mark { width: 34px; height: 34px; border-radius: 11px; }
   .wordmark-mark svg { width: 25px; height: 25px; }
+  .header-actions { gap: 6px; }
+  .header-link {
+    display: inline-flex;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+  .button-small {
+    padding-inline: 12px;
+    white-space: nowrap;
+  }
   .hero { padding-top: 48px; }
   .hero h1 {
     font-size: clamp(31px, 8.5vw, 36px);
@@ -731,4 +771,8 @@ body {
   .puzzle-panel,
   .reveal-panel { border-radius: 24px; }
   .create-form fieldset { border-radius: 22px; }
+}
+
+@media (max-width: 370px) {
+  .wordmark > span:last-child { display: none; }
 }
