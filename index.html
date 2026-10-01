@@ -22,7 +22,7 @@
     <title>言うほどじゃないけど。</title>
     <link rel="icon" href="./favicon.svg?v=9" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css?v=9" />
-    <link rel="stylesheet" href="./cute.css?v=11" />
+    <link rel="stylesheet" href="./cute.css?v=12" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
@@ -153,6 +153,18 @@
               <button id="copy-room-link-button" class="button button-ghost" type="button">部屋のURLをコピー</button>
               <button id="add-room-card-button" class="button button-primary" type="button">この部屋に置く <span aria-hidden="true">＋</span></button>
             </div>
+            <div id="room-owner-actions" class="room-owner-actions" hidden>
+              <button id="rename-room-button" class="owner-action" type="button">部屋の名前を変える</button>
+              <button id="delete-room-button" class="owner-action owner-action-delete" type="button">部屋を削除する</button>
+            </div>
+            <form id="room-name-form" class="room-name-form" hidden>
+              <label for="room-name-input">部屋の名前</label>
+              <div>
+                <input id="room-name-input" type="text" maxlength="24" required />
+                <button class="button button-primary" type="submit">保存</button>
+                <button id="cancel-room-name-button" class="button button-ghost" type="button">やめる</button>
+              </div>
+            </form>
             <p id="room-copy-status" class="copy-status" aria-live="polite"></p>
           </div>
           <div id="room-cards" class="room-cards" aria-live="polite"></div>
@@ -336,6 +348,10 @@
                   <span><strong>公開</strong><small>みんなのカードに流れる</small></span>
                 </label>
               </div>
+              <label id="room-name-field" class="field room-name-field">
+                <span>部屋の名前</span>
+                <input id="create-room-name" type="text" maxlength="24" required placeholder="例：放課後の部屋" />
+              </label>
               <p id="visibility-note" class="prototype-note">限定公開は共有URLへ、公開はみんなのフィードへ。</p>
             </fieldset>
 
@@ -395,6 +411,6 @@
     </footer>
 
     <script src="./config.js?v=1" defer></script>
-    <script src="./app.js?v=11" defer></script>
+    <script src="./app.js?v=12" defer></script>
   </body>
 </html>

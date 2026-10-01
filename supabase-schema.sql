@@ -521,4 +521,297 @@ grant execute on function public.get_card_v2(uuid, text) to anon, authenticated;
 grant execute on function public.update_card(uuid, text, text, text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.delete_card(uuid, text) to anon, authenticated;
 
+create table if not exists public.rooms (
+  token uuid primary key default gen_random_uuid(),
+  name text not null check (char_length(name) between 1 and 24),
+  client_hash text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.rooms enable row level security;
+revoke all on table public.rooms from anon, authenticated;
+
+insert into public.rooms (token, name, client_hash, created_at, updated_at)
+select
+  cards.room_token,
+  'なかまの部屋',
+  (array_agg(cards.client_hash order by cards.created_at asc))[1],
+  min(cards.created_at),
+  max(cards.updated_at)
+from public.cards
+where cards.visibility = 'limited'
+  and cards.room_token is not null
+group by cards.room_token
+on conflict (token) do nothing;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'cards_room_token_fkey'
+      and conrelid = 'public.cards'::regclass
+  ) then
+    alter table public.cards
+      add constraint cards_room_token_fkey
+      foreign key (room_token) references public.rooms(token) on delete cascade;
+  end if;
+end;
+$$;
+
+create or replace function public.create_card_v2(
+  p_visibility text,
+  p_room_token uuid,
+  p_room_name text,
+  p_author text,
+  p_category text,
+  p_teaser text,
+  p_message text,
+  p_answer text,
+  p_hint text,
+  p_puzzle text,
+  p_theme text,
+  p_client_token text
+)
+returns table (id uuid, room_token uuid)
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_room_token uuid;
+  v_room_name text;
+  v_client_hash text;
+begin
+  if p_visibility not in ('public', 'limited') then
+    raise exception 'invalid visibility';
+  end if;
+
+  if p_puzzle not in ('shift', 'reverse', 'morse', 'unicode') then
+    raise exception 'invalid puzzle';
+  end if;
+
+  if p_theme not in ('plum', 'green', 'blue', 'orange') then
+    raise exception 'invalid theme';
+  end if;
+
+  if char_length(trim(coalesce(p_message, ''))) not between 1 and 100
+    or char_length(trim(coalesce(p_answer, ''))) not between 2 and 8
+    or char_length(trim(coalesce(p_category, ''))) not between 1 and 24
+    or char_length(trim(coalesce(p_teaser, ''))) not between 1 and 42
+    or char_length(coalesce(p_author, '')) > 12
+    or char_length(coalesce(p_hint, '')) > 36 then
+    raise exception 'invalid card length';
+  end if;
+
+  if trim(p_answer) !~ '^[ぁ-ゖa-z0-9]+$' then
+    raise exception 'invalid answer characters';
+  end if;
+
+  if char_length(coalesce(p_client_token, '')) not between 20 and 200 then
+    raise exception 'invalid client token';
+  end if;
+
+  v_client_hash := encode(digest(p_client_token, 'sha256'), 'hex');
+  if (
+    select count(*)
+    from public.cards
+    where client_hash = v_client_hash
+      and created_at > now() - interval '1 hour'
+  ) >= 12 then
+    raise exception 'rate limit exceeded';
+  end if;
+
+  if p_visibility = 'limited' then
+    if p_room_token is null then
+      v_room_name := trim(coalesce(p_room_name, ''));
+      if char_length(v_room_name) not between 1 and 24 then
+        raise exception 'invalid room name';
+      end if;
+      insert into public.rooms (name, client_hash)
+      values (v_room_name, v_client_hash)
+      returning rooms.token into v_room_token;
+    else
+      v_room_token := p_room_token;
+      if not exists (select 1 from public.rooms where rooms.token = v_room_token) then
+        raise exception 'room not found';
+      end if;
+    end if;
+
+    if (
+      select count(*)
+      from public.cards
+      where cards.room_token = v_room_token
+        and visibility = 'limited'
+        and is_hidden = false
+    ) >= 8 then
+      raise exception 'room is full';
+    end if;
+  else
+    v_room_token := null;
+  end if;
+
+  return query
+  insert into public.cards (
+    room_token,
+    visibility,
+    author,
+    category,
+    teaser,
+    message,
+    answer,
+    hint,
+    puzzle,
+    theme,
+    client_hash
+  ) values (
+    v_room_token,
+    p_visibility,
+    trim(coalesce(p_author, '')),
+    trim(p_category),
+    trim(p_teaser),
+    trim(p_message),
+    trim(p_answer),
+    trim(coalesce(p_hint, '')),
+    p_puzzle,
+    p_theme,
+    v_client_hash
+  )
+  returning cards.id, cards.room_token;
+end;
+$$;
+
+create or replace function public.create_card(
+  p_visibility text,
+  p_room_token uuid,
+  p_author text,
+  p_category text,
+  p_teaser text,
+  p_message text,
+  p_answer text,
+  p_hint text,
+  p_puzzle text,
+  p_theme text,
+  p_client_token text
+)
+returns table (id uuid, room_token uuid)
+language sql
+security definer
+set search_path = public, pg_temp
+as $$
+  select created.id, created.room_token
+  from public.create_card_v2(
+    p_visibility,
+    p_room_token,
+    'なかまの部屋',
+    p_author,
+    p_category,
+    p_teaser,
+    p_message,
+    p_answer,
+    p_hint,
+    p_puzzle,
+    p_theme,
+    p_client_token
+  ) as created;
+$$;
+
+create or replace function public.get_room_info(p_room_token uuid, p_client_token text)
+returns table (
+  room_token uuid,
+  room_name text,
+  card_count bigint,
+  is_owner boolean,
+  created_at timestamptz,
+  updated_at timestamptz
+)
+language sql
+security definer
+stable
+set search_path = public, extensions, pg_temp
+as $$
+  select
+    rooms.token,
+    rooms.name,
+    count(cards.id) filter (where cards.is_hidden = false),
+    case
+      when char_length(coalesce(p_client_token, '')) between 20 and 200
+        then rooms.client_hash = encode(digest(p_client_token, 'sha256'), 'hex')
+      else false
+    end,
+    rooms.created_at,
+    rooms.updated_at
+  from public.rooms
+  left join public.cards on cards.room_token = rooms.token
+  where rooms.token = p_room_token
+  group by rooms.token, rooms.name, rooms.client_hash, rooms.created_at, rooms.updated_at;
+$$;
+
+create or replace function public.update_room_name(p_room_token uuid, p_room_name text, p_client_token text)
+returns table (room_token uuid, room_name text, updated_at timestamptz)
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_client_hash text;
+begin
+  if char_length(trim(coalesce(p_room_name, ''))) not between 1 and 24 then
+    raise exception 'invalid room name';
+  end if;
+  if char_length(coalesce(p_client_token, '')) not between 20 and 200 then
+    raise exception 'invalid client token';
+  end if;
+
+  v_client_hash := encode(digest(p_client_token, 'sha256'), 'hex');
+  return query
+  update public.rooms
+  set name = trim(p_room_name), updated_at = now()
+  where rooms.token = p_room_token
+    and rooms.client_hash = v_client_hash
+  returning rooms.token, rooms.name, rooms.updated_at;
+
+  if not found then
+    raise exception 'not room owner';
+  end if;
+end;
+$$;
+
+create or replace function public.delete_room(p_room_token uuid, p_client_token text)
+returns table (room_token uuid)
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_client_hash text;
+begin
+  if char_length(coalesce(p_client_token, '')) not between 20 and 200 then
+    raise exception 'invalid client token';
+  end if;
+
+  v_client_hash := encode(digest(p_client_token, 'sha256'), 'hex');
+  return query
+  delete from public.rooms
+  where rooms.token = p_room_token
+    and rooms.client_hash = v_client_hash
+  returning rooms.token;
+
+  if not found then
+    raise exception 'not room owner';
+  end if;
+end;
+$$;
+
+revoke all on function public.create_card_v2(text, uuid, text, text, text, text, text, text, text, text, text, text) from public;
+revoke all on function public.get_room_info(uuid, text) from public;
+revoke all on function public.update_room_name(uuid, text, text) from public;
+revoke all on function public.delete_room(uuid, text) from public;
+
+grant execute on function public.create_card_v2(text, uuid, text, text, text, text, text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.get_room_info(uuid, text) to anon, authenticated;
+grant execute on function public.update_room_name(uuid, text, text) to anon, authenticated;
+grant execute on function public.delete_room(uuid, text) to anon, authenticated;
+
 notify pgrst, 'reload schema';

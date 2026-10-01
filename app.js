@@ -38,6 +38,7 @@ const publicSamples = [
 const sampleRoom = {
   version: 1,
   id: "sample-room",
+  name: "サンプルの部屋",
   isSample: true,
   cards: [
     sampleCard,
@@ -216,7 +217,11 @@ function normalizeRoom(room) {
   return {
     version: 1,
     id: String(room?.id || crypto.randomUUID?.() || Date.now()).slice(0, 48),
+    name: String(room?.name || room?.room_name || "なかまの部屋").trim().slice(0, 24) || "なかまの部屋",
     isSample: Boolean(room?.isSample),
+    isOwner: Boolean(room?.isOwner ?? room?.is_owner),
+    createdAt: room?.createdAt || room?.created_at || "",
+    updatedAt: room?.updatedAt || room?.updated_at || "",
     cards: cards.map((card) => ({ ...card, visibility: "limited" })),
   };
 }
@@ -251,6 +256,8 @@ async function callBackend(functionName, body = {}) {
     if (message.includes("rate limit")) throw new Error("短時間の投稿が多いため、少し待ってから試してください。");
     if (message.includes("room is full")) throw new Error("この部屋には8枚まで置けます。");
     if (message.includes("not card owner")) throw new Error("このカードは、この端末からは変更できません。");
+    if (message.includes("not room owner")) throw new Error("この部屋は、この端末からは変更できません。");
+    if (message.includes("invalid room name")) throw new Error("部屋の名前は1〜24文字にしてください。");
     throw new Error("公開サービスへ保存できませんでした。少し待ってから試してください。");
   }
   return response.status === 204 ? [] : response.json();
@@ -263,9 +270,13 @@ async function loadPublicCards() {
 
 async function loadRoomCards(roomToken) {
   if (!UUID_PATTERN.test(roomToken)) throw new Error("Invalid room");
-  const rows = await callBackend("get_room_cards_v2", { p_room_token: roomToken, p_client_token: getClientToken() });
-  if (!rows.length) throw new Error("Room not found");
-  return normalizeRoom({ id: roomToken, cards: rows });
+  const clientToken = getClientToken();
+  const [roomRows, cardRows] = await Promise.all([
+    callBackend("get_room_info", { p_room_token: roomToken, p_client_token: clientToken }),
+    callBackend("get_room_cards_v2", { p_room_token: roomToken, p_client_token: clientToken }),
+  ]);
+  if (!roomRows.length) throw new Error("Room not found");
+  return normalizeRoom({ ...roomRows[0], id: roomToken, cards: cardRows });
 }
 
 async function loadPublicCard(cardId) {
@@ -275,10 +286,11 @@ async function loadPublicCard(cardId) {
   return normalizeCard(rows[0]);
 }
 
-async function saveCard(card, roomToken = null) {
-  const rows = await callBackend("create_card", {
+async function saveCard(card, roomToken = null, roomName = "") {
+  const rows = await callBackend("create_card_v2", {
     p_visibility: card.visibility,
     p_room_token: roomToken,
+    p_room_name: roomName,
     p_author: card.author,
     p_category: card.category,
     p_teaser: card.teaser,
@@ -290,6 +302,25 @@ async function saveCard(card, roomToken = null) {
     p_client_token: getClientToken(),
   });
   if (!rows.length) throw new Error("カードを保存できませんでした。");
+  return rows[0];
+}
+
+async function updateOwnRoomName(roomToken, roomName) {
+  const rows = await callBackend("update_room_name", {
+    p_room_token: roomToken,
+    p_room_name: roomName,
+    p_client_token: getClientToken(),
+  });
+  if (!rows.length) throw new Error("部屋の名前を変更できませんでした。");
+  return rows[0];
+}
+
+async function removeOwnRoom(roomToken) {
+  const rows = await callBackend("delete_room", {
+    p_room_token: roomToken,
+    p_client_token: getClientToken(),
+  });
+  if (!rows.length) throw new Error("部屋を削除できませんでした。");
   return rows[0];
 }
 
@@ -356,6 +387,7 @@ function openCreator(room = null) {
   publicOption.disabled = Boolean(creatorRoom);
   limitedOption.checked = Boolean(creatorRoom) || limitedOption.checked;
   visibilityFieldset.classList.toggle("is-room-mode", Boolean(creatorRoom));
+  syncVisibilityField();
   document.querySelector("#visibility-note").textContent = creatorRoom
     ? "この部屋に、限定公開で置きます。"
     : "限定公開は共有URLへ、公開はみんなのフィードへ。";
@@ -399,6 +431,7 @@ function openEditor(card, origin = "home") {
   resetCreatorForm();
   populateCreatorForm(normalized);
   document.querySelectorAll('input[name="visibility"]').forEach((input) => { input.disabled = true; });
+  syncVisibilityField();
   document.querySelector("#visibility-fieldset").classList.add("is-room-mode");
   document.querySelector("#visibility-note").textContent = "公開範囲はそのまま、内容だけ変更できます。";
   document.querySelector("#create-title").innerHTML = "カードを、<br />ちょっと整える。";
@@ -460,6 +493,29 @@ async function openRoom(roomOrToken, { updateHash = true } = {}) {
   } catch {
     openHome({ clearHash: true });
     window.alert("この部屋を開けませんでした。URLを確認してください。");
+  }
+}
+
+function openRoomNameEditor() {
+  if (!activeRoom?.isOwner || activeRoom.isSample) return;
+  const form = document.querySelector("#room-name-form");
+  const input = document.querySelector("#room-name-input");
+  input.value = activeRoom.name;
+  form.hidden = false;
+  input.focus();
+  input.select();
+}
+
+async function deleteActiveRoom() {
+  if (!activeRoom?.isOwner || activeRoom.isSample) return;
+  if (!window.confirm(`「${activeRoom.name}」を削除しますか？\n部屋の中のカードもすべて削除され、元には戻せません。`)) return;
+  try {
+    await removeOwnRoom(activeRoom.id);
+    activeRoom = null;
+    openHome({ clearHash: true });
+    window.alert("部屋を削除しました。");
+  } catch (error) {
+    window.alert(error.message || "部屋を削除できませんでした。");
   }
 }
 
@@ -620,11 +676,7 @@ async function deleteOwnCard(card, origin = "home") {
       await openFeed();
     } else if (origin === "room" && activeRoom) {
       activeRoom.cards = activeRoom.cards.filter((candidate) => candidate.id !== card.id);
-      if (activeRoom.cards.length) renderRoom(activeRoom);
-      else {
-        openHome({ clearHash: true });
-        window.alert("カードを削除しました。部屋が空になったため、トップへ戻ります。");
-      }
+      renderRoom(activeRoom);
     } else {
       openHome({ clearHash: true });
       window.alert("カードを削除しました。");
@@ -644,9 +696,13 @@ function renderPublicFeed(cards) {
 
 function renderRoom(room) {
   const cards = document.querySelector("#room-cards");
+  document.querySelector("#room-title").textContent = room.name;
   document.querySelector("#room-count").textContent = room.cards.length;
   cards.replaceChildren(...room.cards.map((card, index) => createCardButton(card, "room", index, "room-card")));
   document.querySelector("#add-room-card-button").disabled = room.cards.length >= ROOM_CARD_LIMIT;
+  document.querySelector("#room-owner-actions").hidden = room.isSample || !room.isOwner;
+  document.querySelector("#room-name-form").hidden = true;
+  document.querySelector("#room-name-input").value = room.name;
   refreshRelativeTimes();
 }
 
@@ -668,7 +724,7 @@ function renderCompleteCard(card, { edited = false } = {}) {
       ? "みんなに流すカードが\nできました。"
       : joinedRoom
         ? "部屋にカードを\n置きました。"
-        : "なかまの部屋が\nできました。";
+        : `「${createdRoom?.name || "なかまの部屋"}」が\nできました。`;
   document.querySelector("#copy-link-button").textContent = isPublic ? "カードのURLをコピー" : "部屋のURLをコピー";
   document.querySelector("#preview-card-button").textContent = isPublic ? "受け手の画面をためす" : "部屋を見る";
   document.querySelector("#view-feed-button").hidden = !isPublic;
@@ -710,6 +766,15 @@ function syncAnonymousField() {
   if (anonymous) authorInput.value = "";
 }
 
+function syncVisibilityField() {
+  const selected = document.querySelector('input[name="visibility"]:checked')?.value;
+  const field = document.querySelector("#room-name-field");
+  const input = document.querySelector("#create-room-name");
+  const needsRoomName = selected === "limited" && !creatorRoom && !editingCard;
+  field.hidden = !needsRoomName;
+  input.required = needsRoomName;
+}
+
 function resetCreatorForm() {
   const form = document.querySelector("#create-form");
   form.reset();
@@ -719,6 +784,7 @@ function resetCreatorForm() {
   updateCount(document.querySelector("#create-message"), "#message-count");
   syncCategoryField();
   syncAnonymousField();
+  syncVisibilityField();
   updateCipherPreview();
 }
 
@@ -734,6 +800,35 @@ document.querySelectorAll("[data-open-feed]").forEach((button) => button.addEven
 document.querySelectorAll("[data-open-sample]").forEach((button) => button.addEventListener("click", () => openReader(sampleCard)));
 document.querySelectorAll("[data-open-sample-room]").forEach((button) => button.addEventListener("click", () => openRoom(sampleRoom)));
 document.querySelector("#add-room-card-button").addEventListener("click", () => openCreator(activeRoom?.isSample ? null : activeRoom));
+document.querySelector("#rename-room-button").addEventListener("click", openRoomNameEditor);
+document.querySelector("#cancel-room-name-button").addEventListener("click", () => {
+  document.querySelector("#room-name-form").hidden = true;
+});
+document.querySelector("#delete-room-button").addEventListener("click", deleteActiveRoom);
+document.querySelector("#room-name-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!activeRoom?.isOwner) return;
+  const input = document.querySelector("#room-name-input");
+  const nextName = input.value.trim();
+  if (!nextName) {
+    input.setCustomValidity("部屋の名前を入力してください。");
+    input.reportValidity();
+    return;
+  }
+  input.setCustomValidity("");
+  const submitButton = event.submitter;
+  submitButton.disabled = true;
+  try {
+    const updated = await updateOwnRoomName(activeRoom.id, nextName);
+    activeRoom.name = updated.room_name;
+    activeRoom.updatedAt = updated.updated_at;
+    renderRoom(activeRoom);
+  } catch (error) {
+    window.alert(error.message || "部屋の名前を変更できませんでした。");
+  } finally {
+    submitButton.disabled = false;
+  }
+});
 document.querySelector("#reader-edit-button").addEventListener("click", () => openEditor(activeCard, readerReturn));
 document.querySelector("#reader-delete-button").addEventListener("click", () => deleteOwnCard(activeCard, readerReturn));
 
@@ -786,6 +881,7 @@ keyInput.addEventListener("input", () => {
 document.querySelectorAll('input[name="puzzle"]').forEach((input) => input.addEventListener("change", updateCipherPreview));
 document.querySelector("#create-category").addEventListener("change", syncCategoryField);
 document.querySelector("#create-anonymous").addEventListener("change", syncAnonymousField);
+document.querySelectorAll('input[name="visibility"]').forEach((input) => input.addEventListener("change", syncVisibilityField));
 
 document.querySelector("#create-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -834,7 +930,11 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
     });
     const saved = cardBeingEdited
       ? await updateOwnCard(createdCard)
-      : await saveCard(createdCard, createdCard.visibility === "limited" ? creatorRoom?.id || null : null);
+      : await saveCard(
+        createdCard,
+        createdCard.visibility === "limited" ? creatorRoom?.id || null : null,
+        document.querySelector("#create-room-name").value.trim(),
+      );
     createdCard = normalizeCard({
       ...createdCard,
       id: saved.id,
