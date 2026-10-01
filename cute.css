@@ -448,8 +448,15 @@ body {
 
 .feed-heading h1 {
   color: var(--ink);
+  font-size: clamp(46px, 5vw, 68px);
   font-weight: 800;
+  line-height: 1.04;
   letter-spacing: -0.06em;
+}
+
+.feed-title-line {
+  display: block;
+  white-space: nowrap;
 }
 
 .feed-view .button-primary {
