@@ -22,7 +22,7 @@
     <title>言うほどじゃないけど。</title>
     <link rel="icon" href="./favicon.svg?v=9" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css?v=9" />
-    <link rel="stylesheet" href="./cute.css?v=12" />
+    <link rel="stylesheet" href="./cute.css?v=13" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
@@ -35,86 +35,57 @@
         <span>言うほどじゃないけど。</span>
       </button>
       <div class="header-actions">
-        <button class="header-link" type="button" data-open-feed>みんなのカード</button>
-        <button class="button button-small button-ghost" type="button" data-open-create>
-          カードをつくる
+        <button class="about-button" type="button" data-open-about aria-haspopup="dialog">
+          <span aria-hidden="true">?</span>
+          このサイトについて
         </button>
       </div>
     </header>
 
     <main>
-      <section class="view is-active" id="home-view" aria-labelledby="hero-title">
-        <div class="hero wrap">
-          <div class="hero-copy">
-            <p class="eyebrow"><span>♡</span> 小さな話のために</p>
-            <h1 id="hero-title" aria-label="言うほどじゃないけど、気づいてくれたらうれしい。">
-              <span class="desktop-headline" aria-hidden="true">
-                <span class="headline-line">言うほどじゃないけど、</span>
-                <em class="headline-line">気づいてくれたら</em>
-                <em class="headline-line">うれしい。</em>
-              </span>
-              <span class="mobile-headline" aria-hidden="true">
-                <span class="headline-line">言うほどじゃないけど、</span>
-                <em class="headline-line">気づいてくれたら</em>
-                <em class="headline-line">うれしい。</em>
-              </span>
-            </h1>
-            <p class="hero-lead">
-              ちょっと知ってほしいことを、解ける秘密に。
-            </p>
-            <div class="hero-actions">
-              <button class="button button-primary" type="button" data-open-sample-room>
-                <span>サンプルの部屋を見る</span>
-                <span aria-hidden="true">→</span>
-              </button>
-              <button class="text-button" type="button" data-open-create>
-                自分のカードをつくる
-              </button>
-            </div>
-            <p class="micro-copy">
-              解かなくても、通知はありません。
-            </p>
-          </div>
-
-          <div class="hero-card-stage" aria-label="カードの見本">
-            <span class="stage-charm charm-flower" aria-hidden="true">
+      <section class="view is-active" id="home-view" aria-labelledby="home-title">
+        <div class="home-menu wrap">
+          <div class="home-menu-heading">
+            <span class="home-flower" aria-hidden="true">
               <svg viewBox="0 0 48 48"><ellipse cx="24" cy="12" rx="8" ry="11" /><ellipse cx="36" cy="24" rx="11" ry="8" /><ellipse cx="24" cy="36" rx="8" ry="11" /><ellipse cx="12" cy="24" rx="11" ry="8" /><circle cx="24" cy="24" r="6" /></svg>
             </span>
-            <span class="stage-charm charm-heart" aria-hidden="true">
-              <svg viewBox="0 0 48 48"><path d="M24 40S7 30 7 17c0-8 10-12 17-4 7-8 17-4 17 4 0 13-17 23-17 23Z" /></svg>
-            </span>
-            <span class="stage-charm charm-star" aria-hidden="true">
-              <svg viewBox="0 0 48 48"><path d="m24 5 5 13 14 6-14 6-5 13-5-13-14-6 14-6 5-13Z" /></svg>
-            </span>
-            <article class="secret-card secret-card-preview">
-              <div class="preview-symbol-row" aria-hidden="true">
-                <span class="preview-symbol preview-symbol-flower">
-                  <svg viewBox="0 0 48 48"><ellipse cx="24" cy="12" rx="8" ry="11" /><ellipse cx="36" cy="24" rx="11" ry="8" /><ellipse cx="24" cy="36" rx="8" ry="11" /><ellipse cx="12" cy="24" rx="11" ry="8" /><circle cx="24" cy="24" r="6" /></svg>
-                </span>
-                <span class="preview-symbol preview-symbol-envelope">
-                  <svg viewBox="0 0 48 48"><rect x="6" y="10" width="36" height="28" rx="8" /><path d="m10 15 14 11 14-11" /></svg>
-                </span>
-              </div>
-              <div class="card-pictogram" aria-hidden="true">
-                <svg class="sample-flower-svg" viewBox="0 0 120 120" role="presentation">
-                  <ellipse cx="60" cy="30" rx="18" ry="28" />
-                  <ellipse cx="88" cy="52" rx="28" ry="18" />
-                  <ellipse cx="78" cy="84" rx="20" ry="27" />
-                  <ellipse cx="42" cy="84" rx="20" ry="27" />
-                  <ellipse cx="32" cy="52" rx="28" ry="18" />
-                  <circle cx="60" cy="60" r="18" />
-                </svg>
-              </div>
-              <div class="preview-cipher" aria-hidden="true">
-                <span><svg viewBox="0 0 48 48"><path d="M24 39S8 30 8 18c0-8 10-11 16-4 6-7 16-4 16 4 0 12-16 21-16 21Z" /></svg></span>
-                <span><svg viewBox="0 0 48 48"><path d="M6 28c6-10 12-10 18 0s12 10 18 0" /></svg></span>
-                <span><svg viewBox="0 0 48 48"><path d="m24 8 4 11 11 5-11 5-4 11-4-11-11-5 11-5 4-11Z" /></svg></span>
-              </div>
-              <button class="preview-open-button" type="button" data-open-sample aria-label="サンプルカードをひらく">
-                <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 24h25M27 15l9 9-9 9" /></svg>
-              </button>
-            </article>
+            <h1 id="home-title">なにをする？</h1>
           </div>
+          <div class="home-menu-grid">
+            <button class="home-menu-card home-menu-feed" type="button" data-open-feed>
+              <span class="home-menu-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="5" /><path d="M14 34a14 14 0 0 1 0-20M34 14a14 14 0 0 1 0 20M8 40A23 23 0 0 1 8 8M40 8a23 23 0 0 1 0 32" /></svg>
+              </span>
+              <span><strong>みんなのカード</strong><small>公開されたカードを見る</small></span>
+              <span class="home-menu-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="home-menu-card home-menu-create" type="button" data-open-create>
+              <span class="home-menu-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48"><rect x="9" y="7" width="30" height="34" rx="8" /><path d="M24 16v16M16 24h16" /></svg>
+              </span>
+              <span><strong>カードをつくる</strong><small>公開するか、部屋をつくる</small></span>
+              <span class="home-menu-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="home-menu-card home-menu-rooms" type="button" data-open-my-rooms>
+              <span class="home-menu-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48"><path d="M8 22 24 9l16 13v18H8Z" /><path d="M19 40V27h10v13" /></svg>
+              </span>
+              <span><strong>入っている部屋</strong><small><span id="home-room-count">0</span>個の部屋</small></span>
+              <span class="home-menu-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view my-rooms-view" id="my-rooms-view" aria-labelledby="my-rooms-title" hidden>
+        <div class="my-rooms-shell wrap">
+          <button class="back-button" type="button" data-go-home><span aria-hidden="true">←</span> もどる</button>
+          <p class="eyebrow"><span></span> MY ROOMS</p>
+          <div class="my-rooms-heading">
+            <h1 id="my-rooms-title">入っている部屋</h1>
+            <button class="button button-primary" type="button" data-open-create>新しい部屋をつくる <span aria-hidden="true">＋</span></button>
+          </div>
+          <div id="my-rooms-list" class="my-rooms-list" aria-live="polite"></div>
         </div>
       </section>
 
@@ -405,12 +376,30 @@
       </section>
     </main>
 
+    <dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title">
+      <div class="about-dialog-top">
+        <span class="wordmark-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><ellipse cx="24" cy="12" rx="8" ry="11" /><ellipse cx="36" cy="24" rx="11" ry="8" /><ellipse cx="24" cy="36" rx="8" ry="11" /><ellipse cx="12" cy="24" rx="11" ry="8" /><circle cx="24" cy="24" r="6" /></svg>
+        </span>
+        <button id="close-about-button" class="dialog-close" type="button" aria-label="説明を閉じる">×</button>
+      </div>
+      <h2 id="about-title">言うほどじゃないけど。</h2>
+      <p class="about-lead">ちょっと知ってほしいことを、解ける秘密に。</p>
+      <ol class="about-steps">
+        <li><span>1</span><p><strong>カードをつくる</strong>見せたいことと、短い暗号を入れます。</p></li>
+        <li><span>2</span><p><strong>届け方を選ぶ</strong>みんなに公開するか、仲間の部屋へ置きます。</p></li>
+        <li><span>3</span><p><strong>相手が見つける</strong>解くかどうかは相手が自由に決められます。</p></li>
+      </ol>
+      <p class="about-note">部屋のURLを一度開くと、このブラウザの「入っている部屋」に残ります。暗号は遊びのためのものなので、本当の秘密や個人情報は入れないでください。</p>
+      <button id="about-start-button" class="button button-primary button-full" type="button">カードをつくる</button>
+    </dialog>
+
     <footer class="site-footer">
       <p>言うほどじゃないけど。</p>
       <p>解く自由も、解かない自由も。</p>
     </footer>
 
     <script src="./config.js?v=1" defer></script>
-    <script src="./app.js?v=12" defer></script>
+    <script src="./app.js?v=13" defer></script>
   </body>
 </html>

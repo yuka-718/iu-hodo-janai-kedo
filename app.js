@@ -85,6 +85,7 @@ const halfVoicedKana = { ぱ: "は", ぴ: "ひ", ぷ: "ふ", ぺ: "へ", ぽ: "�
 const smallKana = { ぁ: "あ", ぃ: "い", ぅ: "う", ぇ: "え", ぉ: "お", ゃ: "や", ゅ: "ゆ", ょ: "よ", っ: "つ" };
 const ROOM_CARD_LIMIT = 8;
 const CLIENT_TOKEN_KEY = "iu-hodo-client-token-v1";
+const RECENT_ROOMS_KEY = "iu-hodo-recent-rooms-v1";
 const backendConfig = window.IU_HODO_CONFIG || {};
 const SUPABASE_URL = String(backendConfig.supabaseUrl || "").replace(/\/$/, "");
 const SUPABASE_KEY = String(backendConfig.supabaseKey || "");
@@ -92,6 +93,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 const views = [...document.querySelectorAll(".view")];
 const homeView = document.querySelector("#home-view");
+const myRoomsView = document.querySelector("#my-rooms-view");
 const feedView = document.querySelector("#feed-view");
 const roomView = document.querySelector("#room-view");
 const readerView = document.querySelector("#reader-view");
@@ -99,6 +101,7 @@ const createView = document.querySelector("#create-view");
 const completeView = document.querySelector("#complete-view");
 const siteHeader = document.querySelector(".site-header");
 const siteFooter = document.querySelector(".site-footer");
+const aboutDialog = document.querySelector("#about-dialog");
 
 let activeCard = sampleCard;
 let activeRoom = null;
@@ -239,6 +242,55 @@ function getClientToken() {
   }
 }
 
+function getSavedRooms() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECENT_ROOMS_KEY) || "[]");
+    if (!Array.isArray(saved)) return [];
+    return saved
+      .filter((room) => UUID_PATTERN.test(String(room?.id || "")))
+      .map((room) => ({
+        id: String(room.id),
+        name: String(room.name || "なかまの部屋").trim().slice(0, 24) || "なかまの部屋",
+        isOwner: Boolean(room.isOwner),
+        lastOpenedAt: String(room.lastOpenedAt || ""),
+      }))
+      .slice(0, 20);
+  } catch {
+    return [];
+  }
+}
+
+function saveRoomList(rooms) {
+  try {
+    localStorage.setItem(RECENT_ROOMS_KEY, JSON.stringify(rooms.slice(0, 20)));
+  } catch {
+    // 部屋のURLからは引き続き開けるため、保存できない環境では一覧だけ省略します。
+  }
+  updateHomeRoomCount();
+}
+
+function rememberRoom(room) {
+  if (!room || room.isSample || !UUID_PATTERN.test(String(room.id || ""))) return;
+  const nextRoom = {
+    id: room.id,
+    name: room.name,
+    isOwner: Boolean(room.isOwner),
+    lastOpenedAt: new Date().toISOString(),
+  };
+  const rooms = getSavedRooms().filter((savedRoom) => savedRoom.id !== room.id);
+  saveRoomList([nextRoom, ...rooms]);
+}
+
+function forgetRoom(roomId) {
+  saveRoomList(getSavedRooms().filter((room) => room.id !== roomId));
+}
+
+function updateHomeRoomCount() {
+  const count = getSavedRooms().length;
+  const output = document.querySelector("#home-room-count");
+  if (output) output.textContent = String(count);
+}
+
 async function callBackend(functionName, body = {}) {
   if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error("公開サービスへ接続できません。");
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
@@ -370,7 +422,75 @@ function clearSharedHash() {
 
 function openHome({ clearHash = true } = {}) {
   if (clearHash) clearSharedHash();
+  updateHomeRoomCount();
   showView(homeView);
+}
+
+function createSavedRoomItem(room) {
+  const item = document.createElement("article");
+  item.className = "saved-room-item";
+
+  const openButton = document.createElement("button");
+  openButton.type = "button";
+  openButton.className = "saved-room-open";
+  openButton.addEventListener("click", () => openRoom(room.id));
+
+  const icon = document.createElement("span");
+  icon.className = "saved-room-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = '<svg viewBox="0 0 48 48"><path d="M8 22 24 9l16 13v18H8Z"/><path d="M19 40V27h10v13"/></svg>';
+
+  const text = document.createElement("span");
+  const name = document.createElement("strong");
+  name.textContent = room.name;
+  const type = document.createElement("small");
+  type.textContent = room.isOwner ? "自分でつくった部屋" : "参加している部屋";
+  text.append(name, type);
+
+  const arrow = document.createElement("span");
+  arrow.className = "saved-room-arrow";
+  arrow.setAttribute("aria-hidden", "true");
+  arrow.textContent = "→";
+  openButton.append(icon, text, arrow);
+
+  const removeButton = document.createElement("button");
+  removeButton.type = "button";
+  removeButton.className = "saved-room-forget";
+  removeButton.textContent = "一覧から外す";
+  removeButton.addEventListener("click", () => {
+    forgetRoom(room.id);
+    renderMyRooms();
+  });
+
+  item.append(openButton, removeButton);
+  return item;
+}
+
+function renderMyRooms() {
+  const list = document.querySelector("#my-rooms-list");
+  const rooms = getSavedRooms();
+  if (rooms.length) {
+    list.replaceChildren(...rooms.map(createSavedRoomItem));
+    return;
+  }
+
+  const empty = document.createElement("div");
+  empty.className = "my-rooms-empty";
+  const mark = document.createElement("span");
+  mark.setAttribute("aria-hidden", "true");
+  mark.textContent = "⌂";
+  const title = document.createElement("strong");
+  title.textContent = "まだ部屋がありません";
+  const note = document.createElement("p");
+  note.textContent = "共有された部屋のURLをこのブラウザで開くと、ここから戻れるようになります。";
+  empty.append(mark, title, note);
+  list.replaceChildren(empty);
+}
+
+function openMyRooms() {
+  clearSharedHash();
+  renderMyRooms();
+  showView(myRoomsView);
 }
 
 function openCreator(room = null) {
@@ -488,9 +608,11 @@ async function openRoom(roomOrToken, { updateHash = true } = {}) {
     } else {
       activeRoom = normalizeRoom(roomOrToken);
     }
+    rememberRoom(activeRoom);
     renderRoom(activeRoom);
     if (updateHash) history.replaceState(null, "", `#room=${encodeURIComponent(activeRoom.id)}`);
   } catch {
+    if (typeof roomOrToken === "string") forgetRoom(roomOrToken);
     openHome({ clearHash: true });
     window.alert("この部屋を開けませんでした。URLを確認してください。");
   }
@@ -511,6 +633,7 @@ async function deleteActiveRoom() {
   if (!window.confirm(`「${activeRoom.name}」を削除しますか？\n部屋の中のカードもすべて削除され、元には戻せません。`)) return;
   try {
     await removeOwnRoom(activeRoom.id);
+    forgetRoom(activeRoom.id);
     activeRoom = null;
     openHome({ clearHash: true });
     window.alert("部屋を削除しました。");
@@ -797,6 +920,16 @@ document.querySelectorAll("[data-reader-back]").forEach((button) => button.addEv
 document.querySelectorAll("[data-open-create]").forEach((button) => button.addEventListener("click", () => openCreator()));
 document.querySelector("[data-creator-back]").addEventListener("click", leaveCreator);
 document.querySelectorAll("[data-open-feed]").forEach((button) => button.addEventListener("click", openFeed));
+document.querySelectorAll("[data-open-my-rooms]").forEach((button) => button.addEventListener("click", openMyRooms));
+document.querySelectorAll("[data-open-about]").forEach((button) => button.addEventListener("click", () => aboutDialog.showModal()));
+document.querySelector("#close-about-button").addEventListener("click", () => aboutDialog.close());
+document.querySelector("#about-start-button").addEventListener("click", () => {
+  aboutDialog.close();
+  openCreator();
+});
+aboutDialog.addEventListener("click", (event) => {
+  if (event.target === aboutDialog) aboutDialog.close();
+});
 document.querySelectorAll("[data-open-sample]").forEach((button) => button.addEventListener("click", () => openReader(sampleCard)));
 document.querySelectorAll("[data-open-sample-room]").forEach((button) => button.addEventListener("click", () => openRoom(sampleRoom)));
 document.querySelector("#add-room-card-button").addEventListener("click", () => openCreator(activeRoom?.isSample ? null : activeRoom));
@@ -822,6 +955,7 @@ document.querySelector("#room-name-form").addEventListener("submit", async (even
     const updated = await updateOwnRoomName(activeRoom.id, nextName);
     activeRoom.name = updated.room_name;
     activeRoom.updatedAt = updated.updated_at;
+    rememberRoom(activeRoom);
     renderRoom(activeRoom);
   } catch (error) {
     window.alert(error.message || "部屋の名前を変更できませんでした。");
@@ -947,6 +1081,7 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
       createdLink = `${location.origin}${location.pathname}#card=${encodeURIComponent(createdCard.id)}`;
     } else {
       createdRoom = await loadRoomCards(saved.room_token || createdCard.roomToken);
+      rememberRoom(createdRoom);
       createdCard = createdRoom.cards.find((card) => card.id === createdCard.id) || createdCard;
       createdLink = roomLink(createdRoom);
     }
@@ -1019,6 +1154,7 @@ window.addEventListener("hashchange", async () => {
 });
 
 async function initialize() {
+  updateHomeRoomCount();
   updateCount(messageInput, "#message-count");
   updateCipherPreview();
   syncCategoryField();
