@@ -107,6 +107,8 @@ let creatorRoom = null;
 let createdLink = "";
 let hintLevel = 0;
 let readerReturn = "home";
+let editingCard = null;
+let editingOrigin = "home";
 
 function katakanaToHiragana(value) {
   return String(value).replace(/[ァ-ヶ]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0x60));
@@ -169,6 +171,7 @@ function normalizeCard(card) {
   return {
     version: 2,
     id: card.id && UUID_PATTERN.test(String(card.id)) ? String(card.id) : "",
+    roomToken: card.roomToken || card.room_token || "",
     author: String(card.author || "").slice(0, 12),
     category,
     teaser: String(card.teaser || teaserForCategory(category)).slice(0, 42),
@@ -179,7 +182,31 @@ function normalizeCard(card) {
     visibility: card.visibility === "public" ? "public" : "limited",
     theme: themeColors[card.theme] ? card.theme : "plum",
     image: typeof card.image === "string" && card.image.startsWith("data:image/") ? card.image : "",
+    createdAt: card.createdAt || card.created_at || "",
+    updatedAt: card.updatedAt || card.updated_at || "",
+    isOwner: Boolean(card.isOwner ?? card.is_owner),
   };
+}
+
+function formatRelativeTime(value) {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return "";
+  const elapsed = Math.max(0, Date.now() - timestamp);
+  const minutes = Math.floor(elapsed / 60000);
+  if (minutes < 1) return "たった今";
+  if (minutes < 60) return `${minutes}分前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}時間前`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}日前`;
+  const date = new Date(timestamp);
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+function refreshRelativeTimes() {
+  document.querySelectorAll("time[data-created-at]").forEach((element) => {
+    element.textContent = formatRelativeTime(element.dataset.createdAt);
+  });
 }
 
 function normalizeRoom(room) {
@@ -223,26 +250,27 @@ async function callBackend(functionName, body = {}) {
     const message = String(detail.message || "");
     if (message.includes("rate limit")) throw new Error("短時間の投稿が多いため、少し待ってから試してください。");
     if (message.includes("room is full")) throw new Error("この部屋には8枚まで置けます。");
+    if (message.includes("not card owner")) throw new Error("このカードは、この端末からは変更できません。");
     throw new Error("公開サービスへ保存できませんでした。少し待ってから試してください。");
   }
   return response.status === 204 ? [] : response.json();
 }
 
 async function loadPublicCards() {
-  const rows = await callBackend("get_public_cards");
+  const rows = await callBackend("get_public_cards_v2", { p_client_token: getClientToken() });
   return rows.map(normalizeCard).filter((card) => card.id && card.message && card.key);
 }
 
 async function loadRoomCards(roomToken) {
   if (!UUID_PATTERN.test(roomToken)) throw new Error("Invalid room");
-  const rows = await callBackend("get_room_cards", { p_room_token: roomToken });
+  const rows = await callBackend("get_room_cards_v2", { p_room_token: roomToken, p_client_token: getClientToken() });
   if (!rows.length) throw new Error("Room not found");
   return normalizeRoom({ id: roomToken, cards: rows });
 }
 
 async function loadPublicCard(cardId) {
   if (!UUID_PATTERN.test(cardId)) throw new Error("Invalid card");
-  const rows = await callBackend("get_card", { p_card_id: cardId });
+  const rows = await callBackend("get_card_v2", { p_card_id: cardId, p_client_token: getClientToken() });
   if (!rows.length) throw new Error("Card not found");
   return normalizeCard(rows[0]);
 }
@@ -262,6 +290,32 @@ async function saveCard(card, roomToken = null) {
     p_client_token: getClientToken(),
   });
   if (!rows.length) throw new Error("カードを保存できませんでした。");
+  return rows[0];
+}
+
+async function updateOwnCard(card) {
+  const rows = await callBackend("update_card", {
+    p_card_id: card.id,
+    p_author: card.author,
+    p_category: card.category,
+    p_teaser: card.teaser,
+    p_message: card.message,
+    p_answer: card.key,
+    p_hint: card.hint,
+    p_puzzle: card.puzzle,
+    p_theme: card.theme,
+    p_client_token: getClientToken(),
+  });
+  if (!rows.length) throw new Error("カードを変更できませんでした。");
+  return rows[0];
+}
+
+async function removeOwnCard(card) {
+  const rows = await callBackend("delete_card", {
+    p_card_id: card.id,
+    p_client_token: getClientToken(),
+  });
+  if (!rows.length) throw new Error("カードを削除できませんでした。");
   return rows[0];
 }
 
@@ -289,12 +343,16 @@ function openHome({ clearHash = true } = {}) {
 }
 
 function openCreator(room = null) {
+  editingCard = null;
+  editingOrigin = "home";
   creatorRoom = room?.cards ? normalizeRoom(room) : null;
   if (!creatorRoom) clearSharedHash();
   resetCreatorForm();
   const publicOption = document.querySelector('input[name="visibility"][value="public"]');
   const limitedOption = document.querySelector('input[name="visibility"][value="limited"]');
   const visibilityFieldset = document.querySelector("#visibility-fieldset");
+  publicOption.disabled = false;
+  limitedOption.disabled = false;
   publicOption.disabled = Boolean(creatorRoom);
   limitedOption.checked = Boolean(creatorRoom) || limitedOption.checked;
   visibilityFieldset.classList.toggle("is-room-mode", Boolean(creatorRoom));
@@ -304,8 +362,64 @@ function openCreator(room = null) {
   document.querySelector("#create-title").innerHTML = creatorRoom
     ? "この部屋に、<br />ひとつだけ。"
     : "言うほどじゃないことを、<br />ひとつだけ。";
+  document.querySelector("#create-eyebrow").lastChild.textContent = " MAKE YOUR CARD";
+  document.querySelector("#create-submit-button").innerHTML = 'カードをつくる <span aria-hidden="true">→</span>';
   showView(createView);
   setTimeout(() => document.querySelector("#create-category")?.focus(), 0);
+}
+
+function populateCreatorForm(card) {
+  const categorySelect = document.querySelector("#create-category");
+  const standardCategory = [...categorySelect.options].some((option) => option.value === card.category && option.value !== "その他");
+  categorySelect.value = standardCategory ? card.category : "その他";
+  document.querySelector("#create-custom-category").value = standardCategory ? "" : card.category;
+  document.querySelector("#create-anonymous").checked = !card.author;
+  document.querySelector("#create-author").value = card.author;
+  document.querySelector("#create-message").value = card.message;
+  document.querySelector("#create-key").value = card.key;
+  document.querySelector("#create-hint").value = card.hint;
+  document.querySelector(`input[name="puzzle"][value="${card.puzzle}"]`).checked = true;
+  document.querySelector(`input[name="visibility"][value="${card.visibility}"]`).checked = true;
+  document.querySelector(`input[name="theme"][value="${card.theme}"]`).checked = true;
+  document.querySelector("#create-agreement").checked = true;
+  updateCount(document.querySelector("#create-message"), "#message-count");
+  syncCategoryField();
+  if (!standardCategory) document.querySelector("#create-custom-category").value = card.category;
+  syncAnonymousField();
+  if (card.author) document.querySelector("#create-author").value = card.author;
+  updateCipherPreview();
+}
+
+function openEditor(card, origin = "home") {
+  const normalized = normalizeCard(card);
+  if (!normalized.id || !normalized.isOwner) return;
+  editingCard = normalized;
+  editingOrigin = origin;
+  creatorRoom = null;
+  resetCreatorForm();
+  populateCreatorForm(normalized);
+  document.querySelectorAll('input[name="visibility"]').forEach((input) => { input.disabled = true; });
+  document.querySelector("#visibility-fieldset").classList.add("is-room-mode");
+  document.querySelector("#visibility-note").textContent = "公開範囲はそのまま、内容だけ変更できます。";
+  document.querySelector("#create-title").innerHTML = "カードを、<br />ちょっと整える。";
+  document.querySelector("#create-eyebrow").lastChild.textContent = " EDIT YOUR CARD";
+  document.querySelector("#create-submit-button").innerHTML = '変更を保存 <span aria-hidden="true">→</span>';
+  showView(createView);
+  setTimeout(() => document.querySelector("#create-message")?.focus(), 0);
+}
+
+function leaveCreator() {
+  if (!editingCard) {
+    if (creatorRoom) openRoom(creatorRoom);
+    else openHome();
+    return;
+  }
+  if (editingOrigin === "feed") openFeed();
+  else if (editingOrigin === "room" && activeRoom) openRoom(activeRoom);
+  else if (editingOrigin === "complete") {
+    renderCompleteCard(createdCard);
+    showView(completeView);
+  } else openReader(editingCard, editingOrigin);
 }
 
 async function openFeed() {
@@ -354,9 +468,11 @@ function openReader(card, origin = "home") {
   readerReturn = origin;
   hintLevel = 0;
   const meta = puzzleTypes[activeCard.puzzle];
-  document.querySelector("#reader-from").textContent = `from ${activeCard.author || "匿名"}`;
+  const relativeTime = formatRelativeTime(activeCard.createdAt);
+  document.querySelector("#reader-from").textContent = `from ${activeCard.author || "匿名"}${relativeTime ? ` · ${relativeTime}` : ""}`;
   document.querySelector("#reader-title").textContent = activeCard.teaser;
   document.querySelector("#reader-category").textContent = activeCard.category;
+  document.querySelector("#reader-owner-actions").hidden = !activeCard.isOwner;
   document.querySelector("#puzzle-label").textContent = meta.label;
   document.querySelector("#puzzle-title").textContent = meta.title;
   document.querySelector("#puzzle-rule").textContent = meta.rule;
@@ -433,6 +549,8 @@ function decodeRoom(encoded) {
 }
 
 function createCardButton(card, origin, index = 0, extraClass = "", isSample = false) {
+  const shell = document.createElement("article");
+  shell.className = "feed-card-shell";
   const button = document.createElement("button");
   button.type = "button";
   button.className = `feed-card ${extraClass}`.trim();
@@ -445,7 +563,21 @@ function createCardButton(card, origin, index = 0, extraClass = "", isSample = f
   category.textContent = card.category;
   const author = document.createElement("span");
   author.className = "quiet-label";
-  author.textContent = isSample ? `サンプル · from ${card.author || "匿名"}` : `from ${card.author || "匿名"}`;
+  if (isSample) {
+    author.textContent = `サンプル · from ${card.author || "匿名"}`;
+  } else {
+    const byline = document.createElement("span");
+    byline.textContent = `from ${card.author || "匿名"}`;
+    author.append(byline);
+    if (card.createdAt) {
+      const time = document.createElement("time");
+      time.dateTime = card.createdAt;
+      time.dataset.createdAt = card.createdAt;
+      time.title = new Date(card.createdAt).toLocaleString("ja-JP");
+      time.textContent = formatRelativeTime(card.createdAt);
+      author.append(" · ", time);
+    }
+  }
   top.append(category, author);
   const title = document.createElement("strong");
   title.textContent = card.teaser;
@@ -457,7 +589,49 @@ function createCardButton(card, origin, index = 0, extraClass = "", isSample = f
   bottom.textContent = `${puzzleTypes[card.puzzle].label}  ↗`;
   button.append(top, title, cipher, bottom);
   button.addEventListener("click", () => openReader(card, origin));
-  return button;
+  shell.append(button);
+  if (!isSample && card.isOwner && card.id) shell.append(createOwnerActions(card, origin));
+  return shell;
+}
+
+function createOwnerActions(card, origin) {
+  const actions = document.createElement("div");
+  actions.className = "owner-actions";
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.className = "owner-action";
+  editButton.textContent = "編集";
+  editButton.addEventListener("click", () => openEditor(card, origin));
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "owner-action owner-action-delete";
+  deleteButton.textContent = "削除";
+  deleteButton.addEventListener("click", () => deleteOwnCard(card, origin));
+  actions.append(editButton, deleteButton);
+  return actions;
+}
+
+async function deleteOwnCard(card, origin = "home") {
+  if (!card?.id || !card.isOwner) return;
+  if (!window.confirm("このカードを削除しますか？\n削除すると元には戻せません。")) return;
+  try {
+    await removeOwnCard(card);
+    if (origin === "feed") {
+      await openFeed();
+    } else if (origin === "room" && activeRoom) {
+      activeRoom.cards = activeRoom.cards.filter((candidate) => candidate.id !== card.id);
+      if (activeRoom.cards.length) renderRoom(activeRoom);
+      else {
+        openHome({ clearHash: true });
+        window.alert("カードを削除しました。部屋が空になったため、トップへ戻ります。");
+      }
+    } else {
+      openHome({ clearHash: true });
+      window.alert("カードを削除しました。");
+    }
+  } catch (error) {
+    window.alert(error.message || "カードを削除できませんでした。");
+  }
 }
 
 function renderPublicFeed(cards) {
@@ -465,6 +639,7 @@ function renderPublicFeed(cards) {
   const publicButtons = cards.map((card, index) => createCardButton(card, "feed", index));
   const sampleButtons = publicSamples.map((card, index) => createCardButton(card, "feed", cards.length + index, "", true));
   feed.replaceChildren(...publicButtons, ...sampleButtons);
+  refreshRelativeTimes();
 }
 
 function renderRoom(room) {
@@ -472,30 +647,36 @@ function renderRoom(room) {
   document.querySelector("#room-count").textContent = room.cards.length;
   cards.replaceChildren(...room.cards.map((card, index) => createCardButton(card, "room", index, "room-card")));
   document.querySelector("#add-room-card-button").disabled = room.cards.length >= ROOM_CARD_LIMIT;
+  refreshRelativeTimes();
 }
 
-function renderCompleteCard(card) {
+function renderCompleteCard(card, { edited = false } = {}) {
   const container = document.querySelector("#complete-card");
   container.style.background = themeColors[card.theme] || themeColors.plum;
   container.replaceChildren();
   const meta = document.createElement("p");
-  meta.textContent = `${card.category}  ·  from ${card.author || "匿名"}`;
+  const relativeTime = formatRelativeTime(card.createdAt);
+  meta.textContent = `${card.category}  ·  from ${card.author || "匿名"}${relativeTime ? `  ·  ${relativeTime}` : ""}`;
   const title = document.createElement("strong");
   title.textContent = card.teaser;
   container.append(meta, title);
   const isPublic = card.visibility === "public";
   const joinedRoom = !isPublic && creatorRoom;
-  document.querySelector("#complete-title").textContent = isPublic
-    ? "みんなに流すカードが\nできました。"
-    : joinedRoom
-      ? "部屋にカードを\n置きました。"
-      : "なかまの部屋が\nできました。";
+  document.querySelector("#complete-title").textContent = edited
+    ? "カードを\n更新しました。"
+    : isPublic
+      ? "みんなに流すカードが\nできました。"
+      : joinedRoom
+        ? "部屋にカードを\n置きました。"
+        : "なかまの部屋が\nできました。";
   document.querySelector("#copy-link-button").textContent = isPublic ? "カードのURLをコピー" : "部屋のURLをコピー";
   document.querySelector("#preview-card-button").textContent = isPublic ? "受け手の画面をためす" : "部屋を見る";
   document.querySelector("#view-feed-button").hidden = !isPublic;
   document.querySelector("#share-note").textContent = isPublic
     ? "公開フィードと共有URLの両方から、ほかの端末でも見られます。"
     : "この共有URLを知っている人は、部屋を開くことができます。";
+  document.querySelector("#complete-edit-button").hidden = !card.isOwner;
+  document.querySelector("#complete-delete-button").hidden = !card.isOwner;
 }
 
 function selectedPuzzle() {
@@ -548,11 +729,13 @@ document.querySelectorAll("[data-reader-back]").forEach((button) => button.addEv
   else openHome();
 }));
 document.querySelectorAll("[data-open-create]").forEach((button) => button.addEventListener("click", () => openCreator()));
-document.querySelector("[data-creator-back]").addEventListener("click", () => (creatorRoom ? openRoom(creatorRoom) : openHome()));
+document.querySelector("[data-creator-back]").addEventListener("click", leaveCreator);
 document.querySelectorAll("[data-open-feed]").forEach((button) => button.addEventListener("click", openFeed));
 document.querySelectorAll("[data-open-sample]").forEach((button) => button.addEventListener("click", () => openReader(sampleCard)));
 document.querySelectorAll("[data-open-sample-room]").forEach((button) => button.addEventListener("click", () => openRoom(sampleRoom)));
 document.querySelector("#add-room-card-button").addEventListener("click", () => openCreator(activeRoom?.isSample ? null : activeRoom));
+document.querySelector("#reader-edit-button").addEventListener("click", () => openEditor(activeCard, readerReturn));
+document.querySelector("#reader-delete-button").addEventListener("click", () => deleteOwnCard(activeCard, readerReturn));
 
 document.querySelector("#answer-form").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -608,8 +791,9 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
   event.preventDefault();
   const submitButton = event.submitter;
   const originalText = submitButton.innerHTML;
+  const cardBeingEdited = editingCard;
   submitButton.disabled = true;
-  submitButton.textContent = "カードをつくっています…";
+  submitButton.textContent = cardBeingEdited ? "変更を保存しています…" : "カードをつくっています…";
   try {
     const normalizedKey = normalizeAnswer(keyInput.value);
     if ([...normalizedKey].length < 2 || [...normalizedKey].length > 8) {
@@ -625,9 +809,15 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
     keyInput.setCustomValidity("");
     const categorySelect = document.querySelector("#create-category");
     const category = categorySelect.value === "その他" ? document.querySelector("#create-custom-category").value.trim() : categorySelect.value;
-    const visibility = creatorRoom ? "limited" : document.querySelector('input[name="visibility"]:checked').value;
+    const visibility = cardBeingEdited
+      ? cardBeingEdited.visibility
+      : creatorRoom
+        ? "limited"
+        : document.querySelector('input[name="visibility"]:checked').value;
     createdCard = normalizeCard({
       version: 2,
+      id: cardBeingEdited?.id,
+      roomToken: cardBeingEdited?.roomToken,
       author: document.querySelector("#create-anonymous").checked ? "" : document.querySelector("#create-author").value.trim(),
       category,
       teaser: teaserForCategory(category),
@@ -638,17 +828,31 @@ document.querySelector("#create-form").addEventListener("submit", async (event) 
       visibility,
       theme: document.querySelector('input[name="theme"]:checked').value,
       image: "",
+      createdAt: cardBeingEdited?.createdAt || new Date().toISOString(),
+      updatedAt: cardBeingEdited?.updatedAt || "",
+      isOwner: Boolean(cardBeingEdited),
     });
-    const saved = await saveCard(createdCard, createdCard.visibility === "limited" ? creatorRoom?.id || null : null);
-    createdCard = normalizeCard({ ...createdCard, id: saved.id });
+    const saved = cardBeingEdited
+      ? await updateOwnCard(createdCard)
+      : await saveCard(createdCard, createdCard.visibility === "limited" ? creatorRoom?.id || null : null);
+    createdCard = normalizeCard({
+      ...createdCard,
+      id: saved.id,
+      roomToken: saved.room_token || createdCard.roomToken,
+      updatedAt: saved.updated_at || createdCard.updatedAt,
+      isOwner: true,
+    });
     if (createdCard.visibility === "public") {
       createdRoom = null;
       createdLink = `${location.origin}${location.pathname}#card=${encodeURIComponent(createdCard.id)}`;
     } else {
-      createdRoom = await loadRoomCards(saved.room_token);
+      createdRoom = await loadRoomCards(saved.room_token || createdCard.roomToken);
+      createdCard = createdRoom.cards.find((card) => card.id === createdCard.id) || createdCard;
       createdLink = roomLink(createdRoom);
     }
-    renderCompleteCard(createdCard);
+    renderCompleteCard(createdCard, { edited: Boolean(cardBeingEdited) });
+    editingCard = null;
+    editingOrigin = "home";
     document.querySelector("#copy-status").textContent = "";
     showView(completeView);
   } catch (error) {
@@ -681,6 +885,8 @@ document.querySelector("#preview-card-button").addEventListener("click", () => {
   openReader(createdCard);
 });
 document.querySelector("#view-feed-button").addEventListener("click", openFeed);
+document.querySelector("#complete-edit-button").addEventListener("click", () => openEditor(createdCard, "complete"));
+document.querySelector("#complete-delete-button").addEventListener("click", () => deleteOwnCard(createdCard, "complete"));
 document.querySelector("#copy-room-link-button").addEventListener("click", () => {
   if (!activeRoom) return;
   copyLink(roomLink(activeRoom), document.querySelector("#room-copy-status"));
@@ -726,3 +932,4 @@ async function initialize() {
 }
 
 initialize();
+setInterval(refreshRelativeTimes, 30000);

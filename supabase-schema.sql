@@ -267,3 +267,258 @@ grant execute on function public.create_card(text, uuid, text, text, text, text,
 grant execute on function public.get_public_cards() to anon, authenticated;
 grant execute on function public.get_room_cards(uuid) to anon, authenticated;
 grant execute on function public.get_card(uuid) to anon, authenticated;
+
+alter table public.cards
+  add column if not exists updated_at timestamptz not null default now();
+
+create or replace function public.get_public_cards_v2(p_client_token text)
+returns table (
+  id uuid,
+  author text,
+  category text,
+  teaser text,
+  message text,
+  answer text,
+  hint text,
+  puzzle text,
+  theme text,
+  visibility text,
+  created_at timestamptz,
+  updated_at timestamptz,
+  is_owner boolean
+)
+language sql
+security definer
+stable
+set search_path = public, extensions, pg_temp
+as $$
+  select
+    cards.id,
+    cards.author,
+    cards.category,
+    cards.teaser,
+    cards.message,
+    cards.answer,
+    cards.hint,
+    cards.puzzle,
+    cards.theme,
+    cards.visibility,
+    cards.created_at,
+    cards.updated_at,
+    case
+      when char_length(coalesce(p_client_token, '')) between 20 and 200
+        then cards.client_hash = encode(digest(p_client_token, 'sha256'), 'hex')
+      else false
+    end as is_owner
+  from public.cards
+  where cards.visibility = 'public'
+    and cards.is_hidden = false
+  order by cards.created_at desc
+  limit 50;
+$$;
+
+create or replace function public.get_room_cards_v2(p_room_token uuid, p_client_token text)
+returns table (
+  id uuid,
+  room_token uuid,
+  author text,
+  category text,
+  teaser text,
+  message text,
+  answer text,
+  hint text,
+  puzzle text,
+  theme text,
+  visibility text,
+  created_at timestamptz,
+  updated_at timestamptz,
+  is_owner boolean
+)
+language sql
+security definer
+stable
+set search_path = public, extensions, pg_temp
+as $$
+  select
+    cards.id,
+    cards.room_token,
+    cards.author,
+    cards.category,
+    cards.teaser,
+    cards.message,
+    cards.answer,
+    cards.hint,
+    cards.puzzle,
+    cards.theme,
+    cards.visibility,
+    cards.created_at,
+    cards.updated_at,
+    case
+      when char_length(coalesce(p_client_token, '')) between 20 and 200
+        then cards.client_hash = encode(digest(p_client_token, 'sha256'), 'hex')
+      else false
+    end as is_owner
+  from public.cards
+  where cards.visibility = 'limited'
+    and cards.room_token = p_room_token
+    and cards.is_hidden = false
+  order by cards.created_at asc
+  limit 8;
+$$;
+
+create or replace function public.get_card_v2(p_card_id uuid, p_client_token text)
+returns table (
+  id uuid,
+  author text,
+  category text,
+  teaser text,
+  message text,
+  answer text,
+  hint text,
+  puzzle text,
+  theme text,
+  visibility text,
+  created_at timestamptz,
+  updated_at timestamptz,
+  is_owner boolean
+)
+language sql
+security definer
+stable
+set search_path = public, extensions, pg_temp
+as $$
+  select
+    cards.id,
+    cards.author,
+    cards.category,
+    cards.teaser,
+    cards.message,
+    cards.answer,
+    cards.hint,
+    cards.puzzle,
+    cards.theme,
+    cards.visibility,
+    cards.created_at,
+    cards.updated_at,
+    case
+      when char_length(coalesce(p_client_token, '')) between 20 and 200
+        then cards.client_hash = encode(digest(p_client_token, 'sha256'), 'hex')
+      else false
+    end as is_owner
+  from public.cards
+  where cards.id = p_card_id
+    and cards.visibility = 'public'
+    and cards.is_hidden = false
+  limit 1;
+$$;
+
+create or replace function public.update_card(
+  p_card_id uuid,
+  p_author text,
+  p_category text,
+  p_teaser text,
+  p_message text,
+  p_answer text,
+  p_hint text,
+  p_puzzle text,
+  p_theme text,
+  p_client_token text
+)
+returns table (id uuid, room_token uuid, visibility text, updated_at timestamptz)
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_client_hash text;
+begin
+  if p_puzzle not in ('shift', 'reverse', 'morse', 'unicode') then
+    raise exception 'invalid puzzle';
+  end if;
+
+  if p_theme not in ('plum', 'green', 'blue', 'orange') then
+    raise exception 'invalid theme';
+  end if;
+
+  if char_length(trim(coalesce(p_message, ''))) not between 1 and 100
+    or char_length(trim(coalesce(p_answer, ''))) not between 2 and 8
+    or char_length(trim(coalesce(p_category, ''))) not between 1 and 24
+    or char_length(trim(coalesce(p_teaser, ''))) not between 1 and 42
+    or char_length(coalesce(p_author, '')) > 12
+    or char_length(coalesce(p_hint, '')) > 36 then
+    raise exception 'invalid card length';
+  end if;
+
+  if trim(p_answer) !~ '^[ぁ-ゖa-z0-9]+$' then
+    raise exception 'invalid answer characters';
+  end if;
+
+  if char_length(coalesce(p_client_token, '')) not between 20 and 200 then
+    raise exception 'invalid client token';
+  end if;
+
+  v_client_hash := encode(digest(p_client_token, 'sha256'), 'hex');
+
+  return query
+  update public.cards
+  set
+    author = trim(coalesce(p_author, '')),
+    category = trim(p_category),
+    teaser = trim(p_teaser),
+    message = trim(p_message),
+    answer = trim(p_answer),
+    hint = trim(coalesce(p_hint, '')),
+    puzzle = p_puzzle,
+    theme = p_theme,
+    updated_at = now()
+  where cards.id = p_card_id
+    and cards.client_hash = v_client_hash
+    and cards.is_hidden = false
+  returning cards.id, cards.room_token, cards.visibility, cards.updated_at;
+
+  if not found then
+    raise exception 'not card owner';
+  end if;
+end;
+$$;
+
+create or replace function public.delete_card(p_card_id uuid, p_client_token text)
+returns table (id uuid, room_token uuid, visibility text)
+language plpgsql
+security definer
+set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_client_hash text;
+begin
+  if char_length(coalesce(p_client_token, '')) not between 20 and 200 then
+    raise exception 'invalid client token';
+  end if;
+
+  v_client_hash := encode(digest(p_client_token, 'sha256'), 'hex');
+
+  return query
+  delete from public.cards
+  where cards.id = p_card_id
+    and cards.client_hash = v_client_hash
+  returning cards.id, cards.room_token, cards.visibility;
+
+  if not found then
+    raise exception 'not card owner';
+  end if;
+end;
+$$;
+
+revoke all on function public.get_public_cards_v2(text) from public;
+revoke all on function public.get_room_cards_v2(uuid, text) from public;
+revoke all on function public.get_card_v2(uuid, text) from public;
+revoke all on function public.update_card(uuid, text, text, text, text, text, text, text, text, text) from public;
+revoke all on function public.delete_card(uuid, text) from public;
+
+grant execute on function public.get_public_cards_v2(text) to anon, authenticated;
+grant execute on function public.get_room_cards_v2(uuid, text) to anon, authenticated;
+grant execute on function public.get_card_v2(uuid, text) to anon, authenticated;
+grant execute on function public.update_card(uuid, text, text, text, text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.delete_card(uuid, text) to anon, authenticated;
+
+notify pgrst, 'reload schema';

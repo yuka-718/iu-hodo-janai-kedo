@@ -22,7 +22,7 @@
     <title>言うほどじゃないけど。</title>
     <link rel="icon" href="./favicon.svg?v=9" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css?v=9" />
-    <link rel="stylesheet" href="./cute.css?v=10" />
+    <link rel="stylesheet" href="./cute.css?v=11" />
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
@@ -171,6 +171,10 @@
             <p id="reader-from" class="reader-from"></p>
             <h1 id="reader-title"></h1>
             <p id="reader-category" class="reader-category"></p>
+            <div id="reader-owner-actions" class="owner-actions reader-owner-actions" hidden>
+              <button id="reader-edit-button" class="owner-action" type="button">編集する</button>
+              <button id="reader-delete-button" class="owner-action owner-action-delete" type="button">削除する</button>
+            </div>
           </div>
 
           <article class="puzzle-panel" id="puzzle-panel">
@@ -227,7 +231,7 @@
         <div class="creator-shell wrap">
           <div class="creator-heading">
             <button class="back-button" type="button" data-creator-back><span aria-hidden="true">←</span> もどる</button>
-            <p class="eyebrow"><span></span> MAKE YOUR CARD</p>
+            <p id="create-eyebrow" class="eyebrow"><span></span> MAKE YOUR CARD</p>
             <h1 id="create-title">言うほどじゃないことを、<br />ひとつだけ。</h1>
             <p>見られても困らないことだけ、入れてね。</p>
           </div>
@@ -355,7 +359,7 @@
               <span>見られても困らない内容であることを確認しました</span>
             </label>
 
-            <button class="button button-primary button-large button-full" type="submit">
+            <button id="create-submit-button" class="button button-primary button-large button-full" type="submit">
               カードをつくる <span aria-hidden="true">→</span>
             </button>
           </form>
@@ -371,6 +375,8 @@
             <button id="copy-link-button" class="button button-primary button-full" type="button">リンクをコピー</button>
             <button id="preview-card-button" class="button button-ghost button-full" type="button">受け手の画面をためす</button>
             <button id="view-feed-button" class="button button-ghost button-full" type="button" hidden>みんなのカードを見る</button>
+            <button id="complete-edit-button" class="button button-ghost button-full" type="button">このカードを編集する</button>
+            <button id="complete-delete-button" class="button button-danger button-full" type="button">このカードを削除する</button>
           </div>
           <p id="copy-status" class="copy-status" aria-live="polite"></p>
           <p id="share-note" class="share-note"></p>
@@ -389,6 +395,6 @@
     </footer>
 
     <script src="./config.js?v=1" defer></script>
-    <script src="./app.js?v=10" defer></script>
+    <script src="./app.js?v=11" defer></script>
   </body>
 </html>
